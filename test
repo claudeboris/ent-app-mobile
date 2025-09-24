@@ -1,0 +1,50 @@
+app/
+├── _layout.tsx               # Layout racine
+├── language/
+│   └── page.tsx             # Écran de sélection de langue
+├── (auth)/
+│   ├── _layout.tsx           # Layout pour les écrans d'authentification
+│   ├── welcome/
+│   │   └── page.tsx          # Écran de bienvenue
+│   ├── profile/
+│   │   └── page.tsx          # Sélection de profil
+│   ├── login/
+│   │   └── page.tsx          # Connexion
+│   ├── forgot-password/
+│   │   └── page.tsx          # Mot de passe oublié
+│   └── otp/
+│       └── page.tsx          # Vérification OTP
+├── (tabs)/
+│   ├── _layout.tsx           # Layout pour les onglets (après authentification)
+│   ├── home/
+│   │   └── page.tsx
+│   └── ...                   # Autres onglets
+└── +not-found.tsx            # Page 404
+
+components/
+├── Button.tsx                # Bouton réutilisable
+├── Input.tsx                 # Champ de saisie
+├── Header.tsx                # En-tête commun
+└── Footer.tsx                # Pied de page
+
+constants/
+├── Colors.ts                 # Palette de couleurs
+├── translations.ts           # Traductions multi-langues
+└── strings.ts                # Textes de l'application (obsolète)
+
+contexts/
+└── LanguageContext.tsx       # Contexte pour la langue
+
+hooks/
+├── useAuth.ts                # Hook d'authentification
+└── useLanguage.ts            # Hook pour la langue
+
+assets/
+├── images/
+│   ├── welcome.png
+│   ├── phone-hand.png
+│   ├── logo.png
+│   ├── fr-flag.png           # Drapeau français
+│   └── en-flag.png           # Drapeau anglais
+└── fonts/
+    └── Roboto-Regular.ttf
