@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, StatusBar, Dimensions, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -17,6 +19,29 @@ export default function LoginScreen() {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Charger les identifiants sauvegardés au montage du composant
+  useEffect(() => {
+    loadSavedCredentials();
+  }, []);
+  
+  const loadSavedCredentials = async () => {
+    try {
+      const savedIdentifier = await AsyncStorage.getItem('savedIdentifier');
+      const savedPassword = await AsyncStorage.getItem('savedPassword');
+      const rememberMeStatus = await AsyncStorage.getItem('rememberMe');
+      
+      if (savedIdentifier && rememberMeStatus === 'true') {
+        setIdentifier(savedIdentifier);
+        setRememberMe(true);
+      }
+      if (savedPassword && rememberMeStatus === 'true') {
+        setPassword(savedPassword);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des identifiants sauvegardés:', error);
+    }
+  };
   
   const handleClose = () => {
     router.back();
@@ -68,7 +93,19 @@ export default function LoginScreen() {
       console.log('result', result)
       
       if (result && result.success) {
-        router.push('home');
+        // Sauvegarder les identifiants si "Se souvenir de moi" est coché
+        if (rememberMe) {
+          await AsyncStorage.setItem('savedIdentifier', identifier);
+          await AsyncStorage.setItem('savedPassword', password);
+          await AsyncStorage.setItem('rememberMe', 'true');
+        } else {
+          // Supprimer les identifiants sauvegardés si "Se souvenir de moi" n'est pas coché
+          await AsyncStorage.removeItem('savedIdentifier');
+          await AsyncStorage.removeItem('savedPassword');
+          await AsyncStorage.removeItem('rememberMe');
+        }
+        
+        router.push('/(tabs)/(home)/home');
       } else {
         Alert.alert(t('error.title'), result?.message || t('error.loginFailed'));
       }
@@ -82,7 +119,7 @@ export default function LoginScreen() {
   
   const handleForgotPassword = () => {
     router.push({
-      pathname: 'forgotPassword',
+      pathname: '/(auth)/forgotPassword',
       params: { profileType }
     });
   };
@@ -175,7 +212,11 @@ export default function LoginScreen() {
                   style={styles.eyeButton}
                   onPress={() => setShowPassword(!showPassword)}
                 >
-                  <Text style={styles.eyeIcon}>👁</Text>
+                  <Ionicons 
+                    name={showPassword ? "eye-outline" : "eye-off-outline"} 
+                    size={20} 
+                    color="#666" 
+                  />
                 </TouchableOpacity>
               </View>
             </View>
@@ -318,10 +359,6 @@ const styles = StyleSheet.create({
   eyeButton: {
     paddingHorizontal: 16,
     paddingVertical: 14,
-  },
-  eyeIcon: {
-    fontSize: 18,
-    color: '#666',
   },
   rememberContainer: {
     flexDirection: 'row',

@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import TokenService from './tokenService';
 import StorageService from './storageService';
 
-const API_BASE_URL = 'https://xfnqqm6f-3000.uks1.devtunnels.ms/api' //'https://ent-back.maraboot.tech/api';
+const API_BASE_URL = 'https://ent-back.maraboot.tech/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

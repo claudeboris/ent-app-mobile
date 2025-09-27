@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,10 +10,16 @@ import {
   Dimensions,
   ActivityIndicator,
   RefreshControl,
+  Alert,
+  Share,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
+import * as MediaLibrary from 'expo-media-library';
+import { captureRef } from 'react-native-view-shot';
 
 const { width } = Dimensions.get('window');
 
@@ -25,6 +31,7 @@ const EmploiDuTempsScreen = () => {
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const calendarRef = useRef(null);
   
   const months = [
     'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -56,6 +63,101 @@ const EmploiDuTempsScreen = () => {
     setRefreshing(true);
     await loadEvents();
     setRefreshing(false);
+  };
+
+  // Fonction pour capturer et sauvegarder l'emploi du temps
+  const handleShare = async () => {
+    try {
+      Alert.alert(
+        'Partager l\'emploi du temps',
+        'Que souhaitez-vous faire ?',
+        [
+          {
+            text: 'Annuler',
+            style: 'cancel'
+          },
+          {
+            text: 'Sauvegarder dans la galerie',
+            onPress: async () => {
+              await saveToGallery();
+            }
+          },
+          {
+            text: 'Partager l\'image',
+            onPress: async () => {
+              await shareImage();
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Erreur lors du partage:', error);
+      Alert.alert('Erreur', 'Impossible de partager l\'emploi du temps');
+    }
+  };
+
+  // Sauvegarder l'image dans la galerie
+  const saveToGallery = async () => {
+    try {
+      // Demander les permissions
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission requise', 'L\'application a besoin de l\'autorisation pour accéder à votre galerie.');
+        return;
+      }
+
+      // Capturer l'écran du calendrier
+      const uri = await captureRef(calendarRef, {
+        format: 'jpg',
+        quality: 0.8,
+      });
+
+      // Sauvegarder dans la galerie
+      const asset = await MediaLibrary.createAssetAsync(uri);
+      await MediaLibrary.createAlbumAsync('ENT App', asset, false);
+      
+      Alert.alert('Succès', 'L\'emploi du temps a été sauvegardé dans votre galerie !');
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      Alert.alert('Erreur', 'Impossible de sauvegarder l\'emploi du temps');
+    }
+  };
+
+  // Partager l'image
+  const shareImage = async () => {
+    try {
+      // Capturer l'écran du calendrier
+      const uri = await captureRef(calendarRef, {
+        format: 'jpg',
+        quality: 0.8,
+      });
+
+      const currentMonth = months[currentDate.getMonth()];
+      const currentYear = currentDate.getFullYear();
+      
+      await Share.share({
+        url: uri,
+        message: `Mon emploi du temps pour ${currentMonth} ${currentYear}`,
+        title: 'Emploi du temps',
+      });
+    } catch (error) {
+      console.error('Erreur lors du partage:', error);
+      Alert.alert('Erreur', 'Impossible de partager l\'emploi du temps');
+    }
+  };
+
+  // Fonction pour la recherche (simple)
+  const handleSearch = () => {
+    Alert.alert(
+      'Recherche',
+      'Fonctionnalité de recherche à venir.\nVous pourrez bientôt rechercher des cours, enseignants ou salles.',
+      [{ text: 'OK' }]
+    );
+  };
+
+  // Fonction pour les notifications
+  const handleNotifications = () => {
+    router.push('notification');
   };
   
   // Déterminer le type d'événement prédominant pour un jour donné
@@ -215,19 +317,20 @@ const EmploiDuTempsScreen = () => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Emploi du temps</Text>
         <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity style={styles.iconButton} onPress={handleShare}>
             <Ionicons name="share-outline" size={24} color="#333" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity style={styles.iconButton} onPress={handleSearch}>
             <Ionicons name="search-outline" size={24} color="#333" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity style={styles.iconButton} onPress={handleNotifications}>
             <Ionicons name="notifications-outline" size={24} color="#333" />
           </TouchableOpacity>
         </View>
       </View>
       
       <ScrollView 
+        ref={calendarRef}
         style={styles.content} 
         showsVerticalScrollIndicator={false}
         refreshControl={

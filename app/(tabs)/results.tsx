@@ -25,28 +25,43 @@ export default function ResultsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedYear, setSelectedYear] = useState('2023-2024');
-  const [selectedPeriod, setSelectedPeriod] = useState(t('results.firstQuarter'));
+  const [selectedPeriod, setSelectedPeriod] = useState('1er trimestre');
   const [notesData, setNotesData] = useState(null);
   const [bulletinsData, setBulletinsData] = useState(null);
+  const [availableYears, setAvailableYears] = useState(['2023-2024', '2024-2025', '2025-2026']);
+  const periods = ['1er trimestre', '2ème trimestre', '3ème trimestre'];
+  const periodDates = {
+    '1er trimestre': 'Sep - Déc 2023',
+    '2ème trimestre': 'Jan - Avr 2024',
+    '3ème trimestre': 'Mai - Juil 2024'
+  };
+
   
   // Charger les données de notes
   const loadNotesData = async () => {
     if (!user) return;
     
     try {
-      const response = await api.get(`/notes/eleve/${user.id}/notes-enseignants`);
-      setNotesData(response.data);
+      console.log('Chargement des notes pour:', selectedYear, selectedPeriod);
+      const response = await api.get(`/notes/eleve/${user.id}/notes-enseignants`, {
+        params: {
+          anneeScolaire: selectedYear,
+          periode: selectedPeriod
+        }
+      });
       
-      // Mettre à jour les sélections avec les données reçues
-      if (response.data.anneeScolaire) {
-        setSelectedYear(response.data.anneeScolaire);
-      }
-      if (response.data.periode) {
-        setSelectedPeriod(response.data.periode);
+      console.log('Réponse API notes:', response.data);
+      
+      if (response.data && response.data.data) {
+        setNotesData(response.data);
+      } else {
+        setNotesData(null);
       }
     } catch (error) {
       console.error('Erreur lors du chargement des notes:', error);
-      Alert.alert(t('error.title'), t('results.notesError'));
+      setNotesData(null);
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -59,7 +74,26 @@ export default function ResultsScreen() {
       setBulletinsData(response.data);
     } catch (error) {
       console.error('Erreur lors du chargement des bulletins:', error);
-      Alert.alert(t('error.title'), t('results.bulletinsError'));
+      setBulletinsData(null);
+    }
+  };
+
+  // Charger les années scolaires disponibles
+  const loadAvailableYears = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await api.get(`/notes/eleve/${user.id}/annees-scolaires`);
+      if (response.data && response.data.data) {
+        setAvailableYears(response.data.data);
+        // Définir la première année comme sélectionnée si pas encore définie
+        if (response.data.data.length > 0 && !selectedYear) {
+          setSelectedYear(response.data.data[0]);
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des années scolaires:', error);
+      // Garder les années par défaut en cas d'erreur
     }
   };
   
@@ -67,6 +101,7 @@ export default function ResultsScreen() {
   const loadData = async () => {
     setIsLoading(true);
     await Promise.all([
+      loadAvailableYears(),
       loadNotesData(),
       loadBulletinsData()
     ]);
@@ -93,6 +128,79 @@ export default function ResultsScreen() {
       year: 'numeric',
     });
   };
+
+  // Fonction pour changer d'année scolaire
+  const handleYearChange = () => {
+    if (availableYears.length === 0) {
+      Alert.alert('Information', 'Aucune année scolaire disponible');
+      return;
+    }
+    
+    Alert.alert(
+      'Année scolaire',
+      'Sélectionnez une année',
+      availableYears.map(year => ({
+        text: year,
+        onPress: async () => {
+          setSelectedYear(year);
+          // Réinitialiser les données et recharger
+          setNotesData(null);
+          setIsLoading(true);
+          await loadNotesData();
+        }
+      }))
+    );
+  };
+
+  // Fonction pour changer de période
+  const handlePeriodChange = () => {
+    Alert.alert(
+      'Période',
+      'Sélectionnez une période',
+      periods.map(period => ({
+        text: period,
+        onPress: async () => {
+          setSelectedPeriod(period);
+          // Réinitialiser les données et recharger
+          setNotesData(null);
+          setIsLoading(true);
+          await loadNotesData();
+        }
+      }))
+    );
+  };
+
+  // Navigation entre trimestres
+  const navigatePeriod = (direction) => {
+    const currentIndex = periods.indexOf(selectedPeriod);
+    let newIndex;
+    
+    if (direction === 'next') {
+      newIndex = currentIndex < periods.length - 1 ? currentIndex + 1 : 0;
+    } else {
+      newIndex = currentIndex > 0 ? currentIndex - 1 : periods.length - 1;
+    }
+    
+    const newPeriod = periods[newIndex];
+    setSelectedPeriod(newPeriod);
+    // Réinitialiser les données et recharger
+    setNotesData(null);
+    setIsLoading(true);
+    loadNotesData();
+  };
+
+  // Fonctions pour les icônes du header
+  const handleShare = () => {
+    Alert.alert('Partage', 'Fonctionnalité de partage des résultats à venir');
+  };
+
+  const handleSearch = () => {
+    Alert.alert('Recherche', 'Fonctionnalité de recherche des résultats à venir');
+  };
+
+  const handleBookmark = () => {
+    Alert.alert('Favoris', 'Fonctionnalité de favoris des résultats à venir');
+  };
   
   if (isLoading) {
     return (
@@ -100,7 +208,10 @@ export default function ResultsScreen() {
         <StatusBar barStyle="dark-content" backgroundColor="white" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>{t('results.loading')}</Text>
+          <Text style={styles.loadingText}>Chargement des résultats...</Text>
+          <Text style={styles.loadingSubtext}>
+            {selectedYear} - {selectedPeriod}
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -116,16 +227,16 @@ export default function ResultsScreen() {
       {/* Sélecteurs d'année et de période */}
       <View style={styles.selectorsContainer}>
         <View style={styles.selector}>
-          <Text style={styles.selectorLabel}>{t('results.schoolYear')}</Text>
-          <TouchableOpacity style={styles.selectorButton}>
+          <Text style={styles.selectorLabel}>Année scolaire</Text>
+          <TouchableOpacity style={styles.selectorButton} onPress={handleYearChange}>
             <Text style={styles.selectorValue}>{selectedYear}</Text>
             <Ionicons name="chevron-down" size={16} color="#666" />
           </TouchableOpacity>
         </View>
         
         <View style={styles.selector}>
-          <Text style={styles.selectorLabel}>{t('results.period')}</Text>
-          <TouchableOpacity style={styles.selectorButton}>
+          <Text style={styles.selectorLabel}>Période</Text>
+          <TouchableOpacity style={styles.selectorButton} onPress={handlePeriodChange}>
             <Text style={styles.selectorValue}>{selectedPeriod}</Text>
             <Ionicons name="chevron-down" size={16} color="#666" />
           </TouchableOpacity>
@@ -134,52 +245,59 @@ export default function ResultsScreen() {
       
       {/* Trimester Header */}
       <View style={styles.trimesterHeader}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigatePeriod('prev')}>
           <Ionicons name="chevron-back" size={24} color="#666" />
         </TouchableOpacity>
         <View style={styles.trimesterInfo}>
           <Text style={styles.trimesterTitle}>{selectedPeriod}</Text>
-          <Text style={styles.trimesterDate}>Sep - Déc 2023</Text>
+          <Text style={styles.trimesterDate}>{periodDates[selectedPeriod] || 'Sep - Déc 2023'}</Text>
         </View>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigatePeriod('next')}>
           <Ionicons name="chevron-forward" size={24} color="#666" />
         </TouchableOpacity>
       </View>
       
       {/* Stats Cards */}
-      {notesData && notesData.data && notesData.data.stats && (
+      {notesData && notesData.data && notesData.data.stats ? (
         <View style={styles.statsContainer}>
           <View style={styles.moyenneCard}>
-            <Text style={styles.cardLabel}>{t('results.average')}</Text>
+            <Text style={styles.cardLabel}>Moyenne</Text>
             <Text style={styles.cardNumber}>{notesData.data.stats.moyenne}</Text>
           </View>
           
           <View style={styles.bestNoteCard}>
-            <Text style={styles.cardLabel}>{t('results.bestGrade')}</Text>
+            <Text style={styles.cardLabel}>Meilleure note</Text>
             <Text style={styles.cardNumber}>{notesData.data.stats.meilleureNote}</Text>
           </View>
           
           <View style={styles.worstNoteCard}>
-            <Text style={styles.cardLabel}>{t('results.worstGrade')}</Text>
+            <Text style={styles.cardLabel}>Moins bonne note</Text>
             <Text style={styles.cardNumber}>{notesData.data.stats.moinsBonneNote}</Text>
           </View>
+        </View>
+      ) : !isLoading && (
+        <View style={styles.noDataContainer}>
+          <Ionicons name="document-text-outline" size={48} color="#ccc" />
+          <Text style={styles.noDataText}>
+            Aucune donnée disponible pour {selectedPeriod} {selectedYear}
+          </Text>
         </View>
       )}
       
       {/* Grades Table */}
-      {notesData && notesData.data && notesData.data.notesParMatiere && (
+      {notesData && notesData.data && notesData.data.notesParMatiere && notesData.data.notesParMatiere.length > 0 ? (
         <View style={styles.gradesTable}>
           {/* Header */}
           <View style={styles.tableHeader}>
-            <Text style={styles.headerSubject}>{t('results.subjects')}</Text>
-            <Text style={styles.headerNote}>{t('results.grade1')}</Text>
-            <Text style={styles.headerNote}>{t('results.grade2')}</Text>
-            <Text style={styles.headerNote}>{t('results.grade3')}</Text>
-            <Text style={styles.headerMoyenne}>{t('results.averageGrade')}</Text>
+            <Text style={styles.headerSubject}>Matières</Text>
+            <Text style={styles.headerNote}>Note 1</Text>
+            <Text style={styles.headerNote}>Note 2</Text>
+            <Text style={styles.headerNote}>Note 3</Text>
+            <Text style={styles.headerMoyenne}>Moyenne</Text>
           </View>
           
           {/* Rows */}
-          {Object.values(notesData.data.notesParMatiere).map((matiereData, index) => (
+          {notesData.data.notesParMatiere.map((matiereData, index) => (
             <View key={index} style={styles.tableRow}>
               <Text style={styles.subjectName}>{matiereData.matiere.nom}</Text>
               <Text style={styles.gradeCell}>
@@ -196,6 +314,16 @@ export default function ResultsScreen() {
               </View>
             </View>
           ))}
+        </View>
+      ) : !isLoading && notesData === null && (
+        <View style={styles.noDataContainer}>
+          <Ionicons name="school-outline" size={48} color="#ccc" />
+          <Text style={styles.noDataText}>
+            Aucune note disponible pour {selectedPeriod} {selectedYear}
+          </Text>
+          <Text style={styles.noDataSubtext}>
+            Les notes apparaîtront ici une fois qu'elles seront saisies par vos enseignants.
+          </Text>
         </View>
       )}
       
@@ -300,13 +428,13 @@ export default function ResultsScreen() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{t('results.title')}</Text>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.headerButton}>
+          <TouchableOpacity style={styles.headerButton} onPress={handleShare}>
             <Ionicons name="share-outline" size={24} color="#666" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton}>
+          <TouchableOpacity style={styles.headerButton} onPress={handleSearch}>
             <Ionicons name="search-outline" size={24} color="#666" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton}>
+          <TouchableOpacity style={styles.headerButton} onPress={handleBookmark}>
             <Ionicons name="bookmark-outline" size={24} color="#666" />
           </TouchableOpacity>
         </View>
@@ -354,6 +482,12 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     color: '#666',
+  },
+  loadingSubtext: {
+    marginTop: 5,
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -647,5 +781,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     marginTop: 10,
+    textAlign: 'center',
+  },
+  noDataSubtext: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    marginTop: 5,
+    paddingHorizontal: 20,
   },
 });

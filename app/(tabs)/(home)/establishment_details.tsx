@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Linking,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -118,13 +119,6 @@ export default function OlsonHartmannScreen() {
           <Text style={styles.infoText}>{contacts.email}</Text>
         </View>
         
-        {contacts.email2 && (
-          <View style={styles.infoItem}>
-            <Ionicons name="mail-outline" size={20} color="#666" />
-            <Text style={styles.infoText}>{contacts.email2}</Text>
-          </View>
-        )}
-        
         <View style={styles.infoItem}>
           <Ionicons name="call-outline" size={20} color="#666" />
           <Text style={styles.infoText}>{contacts.telephone}</Text>
@@ -155,13 +149,13 @@ export default function OlsonHartmannScreen() {
         </View>
         
         <View style={styles.infoItem}>
-          <Ionicons name="calendar-outline" size={20} color="#666" />
-          <Text style={styles.infoText}>Année scolaire: {configuration.divisions.find(d => d.estActif)?.nom || 'Non définie'}</Text>
+          <Ionicons name="people-outline" size={20} color="#666" />
+          <Text style={styles.infoText}>{effectifActuel} / {effectifMax} étudiants</Text>
         </View>
         
         <View style={styles.infoItem}>
-          <Ionicons name="people-outline" size={20} color="#666" />
-          <Text style={styles.infoText}>{effectifActuel} / {effectifMax} étudiants</Text>
+          <Ionicons name="calendar-outline" size={20} color="#666" />
+          <Text style={styles.infoText}>Année scolaire: 2025-2026</Text>
         </View>
         
         <View style={styles.infoItem}>
@@ -267,9 +261,6 @@ export default function OlsonHartmannScreen() {
             <Text style={styles.messageButtonText}>Message</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.moreButton}>
-            <Ionicons name="ellipsis-horizontal" size={20} color="#666" />
-          </TouchableOpacity>
         </View>
         
         {/* Tabs avec style amélioré */}
@@ -431,14 +422,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     marginRight: 10,
-  },
-  moreButton: {
-    width: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
   },
   buttonText: {
     color: 'white',

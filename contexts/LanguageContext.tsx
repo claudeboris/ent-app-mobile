@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import * as SecureStore from 'expo-secure-store';
-import { translations } from '../constants/translations'; // Ligne manquante
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { translations } from '../constants/translations';
 
 type Language = 'fr' | 'en';
 
@@ -22,12 +22,12 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
 
   const setLanguage = async (lang: Language) => {
     setLanguageState(lang);
-    await SecureStore.setItemAsync('language', lang);
+    await AsyncStorage.setItem('language', lang);
   };
 
   const loadLanguage = async () => {
     try {
-      const savedLanguage = await SecureStore.getItemAsync('language') as Language;
+      const savedLanguage = await AsyncStorage.getItem('language') as Language;
       if (savedLanguage && (savedLanguage === 'fr' || savedLanguage === 'en')) {
         setLanguageState(savedLanguage);
       }

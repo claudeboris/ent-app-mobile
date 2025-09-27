@@ -5,8 +5,9 @@ import TokenService from './tokenService';
 export const login = async (credentials, profileType) => {
   try {
     const endpoint = profileType === 'parent' ? '/parent/login' : '/eleve/login';
+    console.log('🔗 Tentative de connexion:', { endpoint, credentials, profileType });
     const response = await api.post(endpoint, credentials);
-    console.log('response, ', response.data)
+    console.log('✅ Réponse serveur:', response.data)
     
     if (response.data?.status === 'succès') {
       const { token, expiresIn, data } = response.data;
