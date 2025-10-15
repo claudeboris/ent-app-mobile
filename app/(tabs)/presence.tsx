@@ -187,9 +187,8 @@ export default function PresenceScreen() {
                       </View>
                       
                       {/* Fixed: Added safe navigation with optional chaining */}
-                      <Text style={styles.absenceCourse}>{absence.cours?.titre || t('presence.noCourse')}</Text>
-                      <Text style={styles.absenceMatiere}>{absence.matiere?.nom || t('presence.noSubject')}</Text>
-                      
+                      <Text style={styles.absenceCourse}>{absence.cours?.titre}</Text>
+                      <Text style={styles.absenceMatiere}>{absence?.cours.matiere?.nom}</Text>
                       <View style={styles.absenceFooter}>
                         <View style={[
                           styles.statusBadge, 

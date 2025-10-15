@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, StatusBar, Dimensions, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, StatusBar, Dimensions, Alert, Modal } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -19,6 +19,7 @@ export default function LoginScreen() {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [forgotPasswordModalVisible, setForgotPasswordModalVisible] = useState(false);
   
   // Charger les identifiants sauvegardés au montage du composant
   useEffect(() => {
@@ -118,10 +119,7 @@ export default function LoginScreen() {
   };
   
   const handleForgotPassword = () => {
-    router.push({
-      pathname: '/(auth)/forgotPassword',
-      params: { profileType }
-    });
+    setForgotPasswordModalVisible(true);
   };
   
   // Déterminer le placeholder et le label en fonction du type de profil
@@ -247,6 +245,60 @@ export default function LoginScreen() {
           </View>
         </View>
       </View>
+      
+      {/* Modal Mot de passe oublié */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={forgotPasswordModalVisible}
+        onRequestClose={() => setForgotPasswordModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity 
+                style={styles.modalCloseButton}
+                onPress={() => setForgotPasswordModalVisible(false)}
+              >
+                <Text style={styles.modalCloseIcon}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>{t('forgotPassword.modalTitle')}</Text>
+              <Text style={styles.modalMessage}>
+                {t('forgotPassword.modalMessage')}
+              </Text>
+              
+              <View style={styles.contactInfoContainer}>
+                <Text style={styles.contactInfoTitle}>{t('forgotPassword.contactInfoTitle')}</Text>
+                
+                <View style={styles.contactItem}>
+                  <Ionicons name="call-outline" size={20} color="#4285f4" />
+                  <Text style={styles.contactText}>{t('forgotPassword.contactPhone')}</Text>
+                </View>
+                
+                <View style={styles.contactItem}>
+                  <Ionicons name="mail-outline" size={20} color="#4285f4" />
+                  <Text style={styles.contactText}>{t('forgotPassword.contactEmail')}</Text>
+                </View>
+                
+                <View style={styles.contactItem}>
+                  <Ionicons name="time-outline" size={20} color="#4285f4" />
+                  <Text style={styles.contactText}>{t('forgotPassword.contactHours')}</Text>
+                </View>
+              </View>
+              
+              <TouchableOpacity 
+                style={styles.modalButton}
+                onPress={() => setForgotPasswordModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>{t('forgotPassword.closeButton')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -403,6 +455,89 @@ const styles = StyleSheet.create({
     backgroundColor: '#a0c3ff',
   },
   loginButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  
+  // Styles pour la modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 40,
+    maxHeight: height * 0.7,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+  },
+  modalCloseButton: {
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCloseIcon: {
+    fontSize: 18,
+    color: '#333',
+    fontWeight: '300',
+  },
+  modalContent: {
+    paddingHorizontal: 24,
+    paddingTop: 10,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: '#666',
+    lineHeight: 24,
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  contactInfoContainer: {
+    backgroundColor: '#f5f7fa',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+  },
+  contactInfoTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+  },
+  contactItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  contactText: {
+    fontSize: 16,
+    color: '#333',
+    marginLeft: 12,
+  },
+  modalButton: {
+    backgroundColor: '#4285f4',
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  modalButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',

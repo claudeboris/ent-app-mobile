@@ -41,6 +41,8 @@ export default function RootLayout() {
           <Stack.Screen name="notification" options={{ headerShown: false }} />
           <Stack.Screen name="school_guide" options={{ headerShown: false }} />
           <Stack.Screen name="transaction_detail" options={{ headerShown: false }} />
+          <Stack.Screen name="notification_detail" options={{ headerShown: false }} />
+          <Stack.Screen name="evenement_detail" options={{ headerShown: false }} />
         </Stack>
         <Toast config={toastConfig} />
         <StatusBar style="auto" />

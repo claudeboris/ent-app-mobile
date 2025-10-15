@@ -19,23 +19,17 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import api from '../../services/api';
 
 export default function ResultsScreen() {
-  const { user } = useAuth();
+  const { user, showErrorToast, showSuccessToast } = useAuth();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('notes');
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedYear, setSelectedYear] = useState('2023-2024');
-  const [selectedPeriod, setSelectedPeriod] = useState('1er trimestre');
+  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [currentPeriod, setCurrentPeriod] = useState(null);
   const [notesData, setNotesData] = useState(null);
   const [bulletinsData, setBulletinsData] = useState(null);
-  const [availableYears, setAvailableYears] = useState(['2023-2024', '2024-2025', '2025-2026']);
-  const periods = ['1er trimestre', '2ème trimestre', '3ème trimestre'];
-  const periodDates = {
-    '1er trimestre': 'Sep - Déc 2023',
-    '2ème trimestre': 'Jan - Avr 2024',
-    '3ème trimestre': 'Mai - Juil 2024'
-  };
-
+  const [availableYears, setAvailableYears] = useState([]);
   
   // Charger les données de notes
   const loadNotesData = async () => {
@@ -54,11 +48,35 @@ export default function ResultsScreen() {
       
       if (response.data && response.data.data) {
         setNotesData(response.data);
+        // Mettre à jour l'année et la période avec les valeurs de la réponse
+        setSelectedYear(response.data.anneeScolaire);
+        setSelectedPeriod(response.data.periode);
+        setCurrentPeriod(response.data.data.periode);
       } else {
         setNotesData(null);
       }
     } catch (error) {
       console.error('Erreur lors du chargement des notes:', error);
+      
+      // Gérer les erreurs spécifiques
+      if (error.response) {
+        const { status, data } = error.response;
+        
+        if (status === 404) {
+          if (data.message && data.message.includes("n'est pas inscrit")) {
+            showErrorToast('Erreur', 'Vous n\'êtes pas inscrit pour l\'année scolaire en cours. Veuillez contacter l\'administration.');
+          } else {
+            showErrorToast('Erreur', 'Aucune donnée trouvée pour cette période');
+          }
+        } else if (status === 400) {
+          showErrorToast('Erreur', data.message || 'Requête invalide');
+        } else {
+          showErrorToast('Erreur', 'Impossible de charger les notes');
+        }
+      } else {
+        showErrorToast('Erreur', 'Problème de connexion');
+      }
+      
       setNotesData(null);
     } finally {
       setIsLoading(false);
@@ -74,6 +92,7 @@ export default function ResultsScreen() {
       setBulletinsData(response.data);
     } catch (error) {
       console.error('Erreur lors du chargement des bulletins:', error);
+      showErrorToast('Erreur', 'Impossible de charger les bulletins');
       setBulletinsData(null);
     }
   };
@@ -129,6 +148,27 @@ export default function ResultsScreen() {
     });
   };
 
+  // Formater la période pour l'affichage
+  const formatPeriodDates = () => {
+    if (!currentPeriod || !currentPeriod.dateDebut || !currentPeriod.dateFin) {
+      return '';
+    }
+    
+    const startDate = new Date(currentPeriod.dateDebut);
+    const endDate = new Date(currentPeriod.dateFin);
+    
+    const startMonth = startDate.toLocaleDateString('fr-FR', { month: 'short' });
+    const endMonth = endDate.toLocaleDateString('fr-FR', { month: 'short' });
+    const startYear = startDate.getFullYear();
+    const endYear = endDate.getFullYear();
+    
+    if (startYear === endYear) {
+      return `${startMonth} - ${endMonth} ${startYear}`;
+    } else {
+      return `${startMonth} ${startYear} - ${endMonth} ${endYear}`;
+    }
+  };
+
   // Fonction pour changer d'année scolaire
   const handleYearChange = () => {
     if (availableYears.length === 0) {
@@ -152,43 +192,6 @@ export default function ResultsScreen() {
     );
   };
 
-  // Fonction pour changer de période
-  const handlePeriodChange = () => {
-    Alert.alert(
-      'Période',
-      'Sélectionnez une période',
-      periods.map(period => ({
-        text: period,
-        onPress: async () => {
-          setSelectedPeriod(period);
-          // Réinitialiser les données et recharger
-          setNotesData(null);
-          setIsLoading(true);
-          await loadNotesData();
-        }
-      }))
-    );
-  };
-
-  // Navigation entre trimestres
-  const navigatePeriod = (direction) => {
-    const currentIndex = periods.indexOf(selectedPeriod);
-    let newIndex;
-    
-    if (direction === 'next') {
-      newIndex = currentIndex < periods.length - 1 ? currentIndex + 1 : 0;
-    } else {
-      newIndex = currentIndex > 0 ? currentIndex - 1 : periods.length - 1;
-    }
-    
-    const newPeriod = periods[newIndex];
-    setSelectedPeriod(newPeriod);
-    // Réinitialiser les données et recharger
-    setNotesData(null);
-    setIsLoading(true);
-    loadNotesData();
-  };
-
   // Fonctions pour les icônes du header
   const handleShare = () => {
     Alert.alert('Partage', 'Fonctionnalité de partage des résultats à venir');
@@ -200,6 +203,14 @@ export default function ResultsScreen() {
 
   const handleBookmark = () => {
     Alert.alert('Favoris', 'Fonctionnalité de favoris des résultats à venir');
+  };
+
+  // Fonction pour vérifier si l'élève est inscrit
+  const checkInscription = () => {
+    if (!notesData || !notesData.data || !notesData.data.eleve || !notesData.data.eleve.classe) {
+      return false;
+    }
+    return true;
   };
   
   if (isLoading) {
@@ -217,6 +228,9 @@ export default function ResultsScreen() {
     );
   }
   
+  // Vérifier si l'élève est inscrit
+  const isInscrit = checkInscription();
+  
   const renderNotesTab = () => (
     <ScrollView 
       style={styles.tabContent}
@@ -224,37 +238,38 @@ export default function ResultsScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      {/* Sélecteurs d'année et de période */}
-      <View style={styles.selectorsContainer}>
-        <View style={styles.selector}>
-          <Text style={styles.selectorLabel}>Année scolaire</Text>
-          <TouchableOpacity style={styles.selectorButton} onPress={handleYearChange}>
-            <Text style={styles.selectorValue}>{selectedYear}</Text>
-            <Ionicons name="chevron-down" size={16} color="#666" />
+      {/* Message si non inscrit */}
+      {!isInscrit && (
+        <View style={styles.inscriptionRequiredContainer}>
+          <Ionicons name="alert-circle-outline" size={48} color="#FF5252" />
+          <Text style={styles.inscriptionRequiredTitle}>Inscription requise</Text>
+          <Text style={styles.inscriptionRequiredText}>
+            Vous n'êtes pas inscrit pour l'année scolaire en cours. Veuillez contacter l'administration pour vous inscrire.
+          </Text>
+          <TouchableOpacity 
+            style={styles.inscriptionButton}
+            onPress={() => router.push('contact')}
+          >
+            <Text style={styles.inscriptionButtonText}>Contacter l'administration</Text>
           </TouchableOpacity>
         </View>
-        
-        <View style={styles.selector}>
-          <Text style={styles.selectorLabel}>Période</Text>
-          <TouchableOpacity style={styles.selectorButton} onPress={handlePeriodChange}>
-            <Text style={styles.selectorValue}>{selectedPeriod}</Text>
-            <Ionicons name="chevron-down" size={16} color="#666" />
-          </TouchableOpacity>
-        </View>
+      )}
+      
+      {/* Sélecteur d'année scolaire */}
+      <View style={styles.selector}>
+        <Text style={styles.selectorLabel}>Année scolaire</Text>
+        <TouchableOpacity style={styles.selectorButton} onPress={handleYearChange}>
+          <Text style={styles.selectorValue}>{selectedYear}</Text>
+          <Ionicons name="chevron-down" size={16} color="#666" />
+        </TouchableOpacity>
       </View>
       
-      {/* Trimester Header */}
-      <View style={styles.trimesterHeader}>
-        <TouchableOpacity onPress={() => navigatePeriod('prev')}>
-          <Ionicons name="chevron-back" size={24} color="#666" />
-        </TouchableOpacity>
-        <View style={styles.trimesterInfo}>
-          <Text style={styles.trimesterTitle}>{selectedPeriod}</Text>
-          <Text style={styles.trimesterDate}>{periodDates[selectedPeriod] || 'Sep - Déc 2023'}</Text>
+      {/* Période Header */}
+      <View style={styles.periodHeader}>
+        <View style={styles.periodInfo}>
+          <Text style={styles.periodTitle}>{selectedPeriod}</Text>
+          <Text style={styles.periodDate}>{formatPeriodDates()}</Text>
         </View>
-        <TouchableOpacity onPress={() => navigatePeriod('next')}>
-          <Ionicons name="chevron-forward" size={24} color="#666" />
-        </TouchableOpacity>
       </View>
       
       {/* Stats Cards */}
@@ -262,7 +277,7 @@ export default function ResultsScreen() {
         <View style={styles.statsContainer}>
           <View style={styles.moyenneCard}>
             <Text style={styles.cardLabel}>Moyenne</Text>
-            <Text style={styles.cardNumber}>{notesData.data.stats.moyenne}</Text>
+            <Text style={styles.cardNumber}>{notesData.data.stats.moyenne.toFixed(2)}</Text>
           </View>
           
           <View style={styles.bestNoteCard}>
@@ -275,7 +290,7 @@ export default function ResultsScreen() {
             <Text style={styles.cardNumber}>{notesData.data.stats.moinsBonneNote}</Text>
           </View>
         </View>
-      ) : !isLoading && (
+      ) : !isLoading && isInscrit && (
         <View style={styles.noDataContainer}>
           <Ionicons name="document-text-outline" size={48} color="#ccc" />
           <Text style={styles.noDataText}>
@@ -285,7 +300,7 @@ export default function ResultsScreen() {
       )}
       
       {/* Grades Table */}
-      {notesData && notesData.data && notesData.data.notesParMatiere && notesData.data.notesParMatiere.length > 0 ? (
+      {notesData && notesData.data && notesData.data.notesParMatiere && Object.keys(notesData.data.notesParMatiere).length > 0 ? (
         <View style={styles.gradesTable}>
           {/* Header */}
           <View style={styles.tableHeader}>
@@ -297,7 +312,7 @@ export default function ResultsScreen() {
           </View>
           
           {/* Rows */}
-          {notesData.data.notesParMatiere.map((matiereData, index) => (
+          {Object.values(notesData.data.notesParMatiere).map((matiereData, index) => (
             <View key={index} style={styles.tableRow}>
               <Text style={styles.subjectName}>{matiereData.matiere.nom}</Text>
               <Text style={styles.gradeCell}>
@@ -310,12 +325,12 @@ export default function ResultsScreen() {
                 {matiereData.notes.length > 2 ? matiereData.notes[2].valeur : '-'}
               </Text>
               <View style={styles.moyenneCell}>
-                <Text style={styles.moyenneText}>{matiereData.moyenne}</Text>
+                <Text style={styles.moyenneText}>{matiereData.moyenne.toFixed(2)}</Text>
               </View>
             </View>
           ))}
         </View>
-      ) : !isLoading && notesData === null && (
+      ) : !isLoading && isInscrit && (
         <View style={styles.noDataContainer}>
           <Ionicons name="school-outline" size={48} color="#ccc" />
           <Text style={styles.noDataText}>
@@ -328,7 +343,7 @@ export default function ResultsScreen() {
       )}
       
       {/* Teachers Section */}
-      {notesData && notesData.data && notesData.data.enseignantsParMatiere && (
+      {notesData && notesData.data && notesData.data.enseignantsParMatiere && notesData.data.enseignantsParMatiere.length > 0 ? (
         <View style={styles.teachersSection}>
           <Text style={styles.sectionTitle}>{t('results.teachers')}</Text>
           {notesData.data.enseignantsParMatiere.map((enseignantMatiere, index) => (
@@ -348,6 +363,13 @@ export default function ResultsScreen() {
               <Ionicons name="chevron-forward" size={20} color="#ccc" />
             </TouchableOpacity>
           ))}
+        </View>
+      ) : !isLoading && isInscrit && (
+        <View style={styles.noDataContainer}>
+          <Ionicons name="people-outline" size={48} color="#ccc" />
+          <Text style={styles.noDataText}>
+            Aucun enseignant trouvé pour cette période
+          </Text>
         </View>
       )}
     </ScrollView>
@@ -431,12 +453,12 @@ export default function ResultsScreen() {
           <TouchableOpacity style={styles.headerButton} onPress={handleShare}>
             <Ionicons name="share-outline" size={24} color="#666" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton} onPress={handleSearch}>
+          {/* <TouchableOpacity style={styles.headerButton} onPress={handleSearch}>
             <Ionicons name="search-outline" size={24} color="#666" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.headerButton} onPress={handleBookmark}>
             <Ionicons name="bookmark-outline" size={24} color="#666" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </View>
       
@@ -496,6 +518,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
     backgroundColor: 'white',
+    marginBottom: 10,
   },
   headerTitle: {
     fontSize: 18,
@@ -538,13 +561,40 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
   },
-  selectorsContainer: {
-    flexDirection: 'row',
+  inscriptionRequiredContainer: {
+    backgroundColor: '#FFF5F5',
+    borderRadius: 12,
+    padding: 20,
     marginBottom: 20,
+    alignItems: 'center',
+  },
+  inscriptionRequiredTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FF5252',
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  inscriptionRequiredText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  inscriptionButton: {
+    backgroundColor: '#FF5252',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  inscriptionButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
   selector: {
-    flex: 1,
-    marginRight: 10,
+    marginBottom: 20,
   },
   selectorLabel: {
     fontSize: 12,
@@ -566,25 +616,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
   },
-  trimesterHeader: {
-    flexDirection: 'row',
+  periodHeader: {
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     paddingVertical: 20,
     backgroundColor: 'white',
     paddingHorizontal: 20,
     borderRadius: 12,
     marginBottom: 20,
   },
-  trimesterInfo: {
+  periodInfo: {
     alignItems: 'center',
   },
-  trimesterTitle: {
+  periodTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
   },
-  trimesterDate: {
+  periodDate: {
     fontSize: 14,
     color: '#666',
     marginTop: 2,

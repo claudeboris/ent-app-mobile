@@ -76,7 +76,7 @@ export default function LanguageScreen() {
                 <View style={styles.buttonContent}>
                   <View style={styles.flagContainer}>
                     <Image
-                      source={require('../assets/images/image2.png')}
+                      source={require('../assets/images/image2.jpg')}
                       style={styles.flag}
                       resizeMode="cover"
                     />

@@ -19,7 +19,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import api from '../../../services/api';
 
 export default function OlsonHartmannScreen() {
-  const { user } = useAuth();
+  const { user, showErrorToast, showSuccessToast } = useAuth();
   const [activeTab, setActiveTab] = useState('apropos');
   const [etablissementData, setEtablissementData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,6 +35,7 @@ export default function OlsonHartmannScreen() {
       setEtablissementData(response.data.data.etablissement);
     } catch (error) {
       console.error('Erreur lors du chargement des données de l\'établissement:', error);
+      showErrorToast('Erreur', 'Impossible de charger les informations de l\'établissement');
     } finally {
       setIsLoading(false);
     }
@@ -58,25 +59,46 @@ export default function OlsonHartmannScreen() {
     return `${adresse.rue}, ${adresse.ville} ${adresse.codePostal}, ${adresse.pays}`;
   };
 
+  // Ouvrir un document
+  const openDocument = (document) => {
+    if (document.route) {
+      router.push(document.route);
+    } else if (document.url) {
+      Linking.openURL(document.url).catch(err => {
+        showErrorToast('Erreur', 'Impossible d\'ouvrir le document');
+        console.error('Erreur lors de l\'ouverture du document:', err);
+      });
+    } else {
+      Alert.alert('Document', `Document: ${document.title}`);
+    }
+  };
+
   // Rendre la section des documents
   const renderDocuments = () => {
-    // Documents par défaut si aucun document n'est disponible dans l'API
-    const defaultDocuments = [
-      { id: 1, title: 'Guide scolaire', icon: 'document-outline', route: 'school_guide' },
-      { id: 2, title: 'Règlement intérieur', icon: 'document-outline' },
-      { id: 3, title: 'Programme scolaire', icon: 'document-outline' },
-      { id: 4, title: 'Calendrier académique', icon: 'document-outline' },
-    ];
+    // Vérifier si des documents sont disponibles
+    const hasDocuments = etablissementData?.documents && etablissementData.documents.length > 0;
 
-    // Utiliser les documents de l'API s'ils existent, sinon utiliser les documents par défaut
-    const documents = etablissementData?.documents && etablissementData.documents.length > 0 
-      ? etablissementData.documents.map((doc, index) => ({
-          id: doc._id || index,
-          title: doc.nom,
-          icon: 'document-outline',
-          type: doc.type,
-        }))
-      : defaultDocuments;
+    if (!hasDocuments) {
+      return (
+        <View style={styles.noDocumentsContainer}>
+          <Ionicons name="document-outline" size={60} color="#ccc" />
+          <Text style={styles.noDocumentsTitle}>Aucun document disponible</Text>
+          <Text style={styles.noDocumentsSubtitle}>
+            Les documents de l'établissement seront bientôt disponibles.
+          </Text>
+        </View>
+      );
+    }
+
+    // Mapper les documents de l'API
+    const documents = etablissementData.documents.map((doc, index) => ({
+      id: doc._id || index,
+      title: doc.nom,
+      icon: 'document-outline',
+      type: doc.type,
+      url: doc.url || null,
+      route: doc.route || null,
+    }));
 
     return (
       <View style={styles.documentsContainer}>
@@ -85,20 +107,16 @@ export default function OlsonHartmannScreen() {
             <TouchableOpacity 
               key={document.id} 
               style={styles.documentItem} 
-              onPress={() => {
-                if (document.route) {
-                  router.push(document.route);
-                } else {
-                  // Gérer l'ouverture du document si disponible
-                  Alert.alert('Document', `Ouverture du document: ${document.title}`);
-                }
-              }}
+              onPress={() => openDocument(document)}
               activeOpacity={0.7}
             >
               <View style={styles.documentIcon}>
-                <Ionicons name={document.icon} size={40} color="#ccc" />
+                <Ionicons name={document.icon} size={40} color="#007AFF" />
               </View>
               <Text style={styles.documentTitle}>{document.title}</Text>
+              {document.type && (
+                <Text style={styles.documentType}>{document.type}</Text>
+              )}
             </TouchableOpacity>
           ))}
         </View>
@@ -136,7 +154,12 @@ export default function OlsonHartmannScreen() {
             <Ionicons name="link-outline" size={20} color="#666" />
             <Text 
               style={[styles.infoText, styles.linkText]}
-              onPress={() => Linking.openURL(contacts.siteWeb)}
+              onPress={() => {
+                Linking.openURL(contacts.siteWeb).catch(err => {
+                  showErrorToast('Erreur', 'Impossible d\'ouvrir le site web');
+                  console.error('Erreur lors de l\'ouverture du site web:', err);
+                });
+              }}
             >
               {contacts.siteWeb}
             </Text>
@@ -146,16 +169,6 @@ export default function OlsonHartmannScreen() {
         <View style={styles.infoItem}>
           <Ionicons name="location-outline" size={20} color="#666" />
           <Text style={styles.infoText}>{formatAddress()}</Text>
-        </View>
-        
-        <View style={styles.infoItem}>
-          <Ionicons name="people-outline" size={20} color="#666" />
-          <Text style={styles.infoText}>{effectifActuel} / {effectifMax} étudiants</Text>
-        </View>
-        
-        <View style={styles.infoItem}>
-          <Ionicons name="calendar-outline" size={20} color="#666" />
-          <Text style={styles.infoText}>Année scolaire: 2025-2026</Text>
         </View>
         
         <View style={styles.infoItem}>
@@ -241,7 +254,12 @@ export default function OlsonHartmannScreen() {
             style={styles.callButton}
             onPress={() => {
               if (etablissementData?.contacts?.telephone) {
-                Linking.openURL(`tel:${etablissementData.contacts.telephone}`);
+                Linking.openURL(`tel:${etablissementData.contacts.telephone}`).catch(err => {
+                  showErrorToast('Erreur', 'Impossible d\'effectuer l\'appel');
+                  console.error('Erreur lors de l\'appel téléphonique:', err);
+                });
+              } else {
+                showErrorToast('Information', 'Aucun numéro de téléphone disponible');
               }
             }}
           >
@@ -253,7 +271,12 @@ export default function OlsonHartmannScreen() {
             style={styles.messageButton}
             onPress={() => {
               if (etablissementData?.contacts?.email) {
-                Linking.openURL(`mailto:${etablissementData.contacts.email}`);
+                Linking.openURL(`mailto:${etablissementData.contacts.email}`).catch(err => {
+                  showErrorToast('Erreur', 'Impossible d\'envoyer un email');
+                  console.error('Erreur lors de l\'envoi d\'email:', err);
+                });
+              } else {
+                showErrorToast('Information', 'Aucune adresse email disponible');
               }
             }}
           >
@@ -526,8 +549,32 @@ const styles = StyleSheet.create({
   },
   documentTitle: {
     fontSize: 14,
-    color: '#666',
+    color: '#333',
     textAlign: 'center',
     fontWeight: '500',
+  },
+  documentType: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  noDocumentsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  noDocumentsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 10,
+  },
+  noDocumentsSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 5,
+    paddingHorizontal: 20,
   },
 });

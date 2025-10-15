@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "KALANSO+",
-    "slug": "KALANSO+",
+    "slug": "educatifApp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,7 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.boriso.educatifApp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -35,7 +39,14 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "L'application a besoin d'accéder à vos photos pour sauvegarder l'emploi du temps.",
+          "savePhotosPermission": "L'application a besoin de sauvegarder des photos dans votre galerie."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

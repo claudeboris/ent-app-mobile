@@ -23,29 +23,31 @@ import { url } from '@/constants/url';
 const { width } = Dimensions.get('window');
 
 // Composant Carousel Card
-const CarouselCard = ({ item }) => {
+const CarouselCard = ({ item, onPress }) => {
   return (
-    <View style={styles.carouselCard}>
-      <Image 
-        source={{ 
-          uri: item.image 
-            ? `${url}/uploads/evenements/${item.image}` 
-            : 'https://images.unsplash.com/photo-1596496181848-3091d4878b24?w=400&h=200&fit=crop'
-        }} 
-        style={styles.cardImage} 
-      />
-      <View style={styles.cardOverlay}>
-        <Text style={styles.cardTitle}>{item.titre}</Text>
-        <Text style={styles.cardSubtitle}>{item.description}</Text>
-        <Text style={styles.cardDate}>
-          {new Date(item.dateDebut).toLocaleDateString('fr-FR', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-          })}
-        </Text>
+    <TouchableOpacity onPress={() => onPress(item._id)}>
+      <View style={styles.carouselCard}>
+        <Image 
+          source={{ 
+            uri: item.image 
+              ? `${url}/uploads/evenements/${item.image}` 
+              : 'https://images.unsplash.com/photo-1596496181848-3091d4878b24?w=400&h=200&fit=crop'
+          }} 
+          style={styles.cardImage} 
+        />
+        <View style={styles.cardOverlay}>
+          <Text style={styles.cardTitle}>{item.titre}</Text>
+          <Text style={styles.cardSubtitle}>{item.description}</Text>
+          <Text style={styles.cardDate}>
+            {new Date(item.dateDebut).toLocaleDateString('fr-FR', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })}
+          </Text>
+        </View>
       </View>
-    </View>
+    </TouchableOpacity>
   )
 }
 
@@ -53,7 +55,7 @@ const CarouselCard = ({ item }) => {
 const AssignmentCard = ({ item, t }) => {
   // Déterminer le type d'évaluation
   const getEvaluationType = () => {
-    if (item.sousType === 'examen' || item.type === 'evaluation') {
+    if (item.sousType === 'examen') {
       return t('home.evaluation.exam');
     } else if (item.sousType === 'devoir_surveille') {
       return t('home.evaluation.supervised');
@@ -109,7 +111,7 @@ const AssignmentCard = ({ item, t }) => {
       
       <Text style={styles.assignmentSubject}>{item.titre}</Text>
       <Text style={styles.assignmentTime}>{formatDate()} • {formatTime()}</Text>
-      <Text style={styles.assignmentLocation}>{item.salle}, {item.batiment}</Text>
+      <Text style={styles.assignmentLocation}>{item.salle}{item.batiment ? `, ${item.batiment}` : ''}</Text>
       
       <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor()}20` }]}>
         <View style={[styles.statusDot, { backgroundColor: getStatusColor() }]} />
@@ -145,9 +147,10 @@ export default function HomeScreen() {
       // Charger les événements de l'établissement
       if (user.etablissementActif) {
         try {
-          const eventsResponse = await api.get(`/evenements/etablissement/${user.etablissementActif}`);
+          const eventsResponse = await api.get(`/evenements/mes-evenements`);
           setEvents(eventsResponse.data.data.evenements || []);
         } catch (error) {
+          console.log('Établissement actif:', error);
           console.error('Erreur lors du chargement des événements:', error);
           setEvents([]);
         }
@@ -199,14 +202,19 @@ export default function HomeScreen() {
   // Filtrer les évaluations en fonction de l'onglet actif
   const getFilteredEvaluations = () => {
     if (activeTab === 'devoirs') {
-      return evaluations.filter(evaluation => 
-        evaluation.sousType === 'devoir_surveille' || evaluation.type === 'devoir'
-      );
+      // Filtrer pour n'afficher que les devoirs surveillés
+      return evaluations.filter(evaluation => evaluation.sousType === 'devoir_surveille');
     } else {
-      return evaluations.filter(evaluation => 
-        evaluation.sousType === 'examen' || evaluation.type === 'evaluation'
-      );
+      // Filtrer pour n'afficher que les examens
+      return evaluations.filter(evaluation => evaluation.sousType === 'examen');
     }
+  };
+
+  const handleEventPress = (eventId) => {
+    router.push({
+      pathname: 'evenement_detail',
+      params: { id: eventId }
+    });
   };
   
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
@@ -281,7 +289,7 @@ export default function HomeScreen() {
             <FlatList
               ref={flatListRef}
               data={events}
-              renderItem={({ item }) => <CarouselCard item={item} />}
+              renderItem={({ item }) => <CarouselCard item={item} onPress={handleEventPress} />}
               keyExtractor={item => item._id}
               horizontal
               showsHorizontalScrollIndicator={false}

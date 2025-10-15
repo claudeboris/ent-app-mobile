@@ -11,7 +11,6 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
-  Share,
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +19,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 import * as MediaLibrary from 'expo-media-library';
 import { captureRef } from 'react-native-view-shot';
+import * as Print from 'expo-print';
 
 const { width } = Dimensions.get('window');
 
@@ -30,6 +30,7 @@ const EmploiDuTempsScreen = () => {
   const [activeTab, setActiveTab] = useState('cours');
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const calendarRef = useRef(null);
   
@@ -49,6 +50,7 @@ const EmploiDuTempsScreen = () => {
       setEvents(response.data.data.evenements);
     } catch (error) {
       console.error('Erreur lors du chargement des événements:', error);
+      Alert.alert('Erreur', 'Impossible de charger l\'emploi du temps');
     } finally {
       setIsLoading(false);
     }
@@ -65,11 +67,166 @@ const EmploiDuTempsScreen = () => {
     setRefreshing(false);
   };
 
-  // Fonction pour capturer et sauvegarder l'emploi du temps
+  // Générer le contenu HTML pour le PDF
+  const generatePDFContent = () => {
+    if (events.length === 0) {
+      return `
+        <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; text-align: center; }
+              h1 { color: #007AFF; }
+            </style>
+          </head>
+          <body>
+            <h1>Aucun événement trouvé</h1>
+            <p>Il n'y a aucun événement à afficher pour cette période.</p>
+          </body>
+        </html>
+      `;
+    }
+
+    // Extraire les informations de la période et de l'année scolaire
+    const periodeInfo = events[0].periode;
+    const anneeScolaireInfo = events[0].anneeScolaire;
+    
+    let htmlContent = `
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { text-align: center; color: #007AFF; }
+            h2 { color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .event-type { padding: 4px 8px; border-radius: 4px; color: white; font-size: 12px; }
+            .type-cours { background-color: #3498db; }
+            .type-td { background-color: #9b59b6; }
+            .type-tp { background-color: #f39c12; }
+            .type-devoir { background-color: #4CAF50; }
+            .type-examen { background-color: #F44336; }
+            .type-projet { background-color: #1abc9c; }
+            .header-info { display: flex; justify-content: space-between; margin-bottom: 20px; }
+            .header-info div { width: 48%; }
+          </style>
+        </head>
+        <body>
+          <h1>Emploi du temps - ${user.etablissementActif}</h1>
+          
+          <div class="header-info">
+            <div>
+              <strong>Période:</strong> ${periodeInfo.nom}
+            </div>
+            <div>
+              <strong>Année scolaire:</strong> ${anneeScolaireInfo.nom}
+            </div>
+          </div>
+          
+          <p>Généré le ${new Date().toLocaleDateString('fr-FR')}</p>
+          
+          <h2>Événements</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Heure</th>
+                <th>Matière</th>
+                <th>Type</th>
+                <th>Enseignant</th>
+                <th>Salle</th>
+              </tr>
+            </thead>
+            <tbody>
+    `;
+
+    // Trier les événements par date
+    const sortedEvents = [...events].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    sortedEvents.forEach(event => {
+      const eventDate = new Date(event.date);
+      const formattedDate = eventDate.toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+
+      let eventTypeClass = 'type-cours';
+      let eventTypeName = 'Cours';
+      
+      if (event.type === 'evaluation') {
+        if (event.sousType === 'examen') {
+          eventTypeClass = 'type-examen';
+          eventTypeName = 'Examen';
+        } else if (event.sousType === 'devoir_surveille') {
+          eventTypeClass = 'type-devoir';
+          eventTypeName = 'Devoir';
+        }
+      } else if (event.type === 'td') {
+        eventTypeClass = 'type-td';
+        eventTypeName = 'TD';
+      } else if (event.type === 'tp') {
+        eventTypeClass = 'type-tp';
+        eventTypeName = 'TP';
+      } else if (event.type === 'projet') {
+        eventTypeClass = 'type-projet';
+        eventTypeName = 'Projet';
+      }
+
+      htmlContent += `
+        <tr>
+          <td>${formattedDate}</td>
+          <td>${event.heureDebut} - ${event.heureFin}</td>
+          <td>${event.matiere.nom}</td>
+          <td><span class="event-type ${eventTypeClass}">${eventTypeName}</span></td>
+          <td>${event.enseignant.nomComplet}</td>
+          <td>${event.salle}${event.batiment ? `, ${event.batiment}` : ''}</td>
+        </tr>
+      `;
+    });
+
+    htmlContent += `
+        </tbody>
+      </table>
+    </body>
+  </html>
+    `;
+
+    return htmlContent;
+  };
+
+  // Fonction pour générer et imprimer le PDF
+  const generateAndPrintPDF = async () => {
+    try {
+      setIsDownloading(true);
+      
+      if (events.length === 0) {
+        Alert.alert('Information', 'Aucun événement trouvé pour générer l\'emploi du temps.');
+        return;
+      }
+      
+      // Générer le contenu HTML
+      const htmlContent = generatePDFContent();
+      
+      // Ouvrir le dialogue d'impression natif
+      await Print.printAsync({
+        html: htmlContent,
+      });
+      
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF:', error);
+      Alert.alert('Erreur', 'Impossible de générer l\'emploi du temps.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  // Fonction pour capturer et sauvegarder l'emploi du temps (version actuelle)
   const handleShare = async () => {
     try {
       Alert.alert(
-        'Partager l\'emploi du temps',
+        'Emploi du temps',
         'Que souhaitez-vous faire ?',
         [
           {
@@ -77,22 +234,22 @@ const EmploiDuTempsScreen = () => {
             style: 'cancel'
           },
           {
-            text: 'Sauvegarder dans la galerie',
+            text: 'Imprimer en PDF',
             onPress: async () => {
-              await saveToGallery();
+              await generateAndPrintPDF();
             }
           },
           {
-            text: 'Partager l\'image',
+            text: 'Sauvegarder en image',
             onPress: async () => {
-              await shareImage();
+              await saveToGallery();
             }
           }
         ]
       );
     } catch (error) {
-      console.error('Erreur lors du partage:', error);
-      Alert.alert('Erreur', 'Impossible de partager l\'emploi du temps');
+      console.error('Erreur lors du traitement:', error);
+      Alert.alert('Erreur', 'Impossible de traiter l\'emploi du temps');
     }
   };
 
@@ -120,29 +277,6 @@ const EmploiDuTempsScreen = () => {
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
       Alert.alert('Erreur', 'Impossible de sauvegarder l\'emploi du temps');
-    }
-  };
-
-  // Partager l'image
-  const shareImage = async () => {
-    try {
-      // Capturer l'écran du calendrier
-      const uri = await captureRef(calendarRef, {
-        format: 'jpg',
-        quality: 0.8,
-      });
-
-      const currentMonth = months[currentDate.getMonth()];
-      const currentYear = currentDate.getFullYear();
-      
-      await Share.share({
-        url: uri,
-        message: `Mon emploi du temps pour ${currentMonth} ${currentYear}`,
-        title: 'Emploi du temps',
-      });
-    } catch (error) {
-      console.error('Erreur lors du partage:', error);
-      Alert.alert('Erreur', 'Impossible de partager l\'emploi du temps');
     }
   };
 
@@ -317,11 +451,16 @@ const EmploiDuTempsScreen = () => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Emploi du temps</Text>
         <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconButton} onPress={handleShare}>
-            <Ionicons name="share-outline" size={24} color="#333" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} onPress={handleSearch}>
-            <Ionicons name="search-outline" size={24} color="#333" />
+          <TouchableOpacity 
+            style={styles.iconButton} 
+            onPress={handleShare}
+            disabled={isDownloading}
+          >
+            {isDownloading ? (
+              <ActivityIndicator size="small" color="#007AFF" />
+            ) : (
+              <Ionicons name="print-outline" size={24} color="#333" />
+            )}
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconButton} onPress={handleNotifications}>
             <Ionicons name="notifications-outline" size={24} color="#333" />
@@ -701,4 +840,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EmploiDuTempsScreen
+export default EmploiDuTempsScreen;

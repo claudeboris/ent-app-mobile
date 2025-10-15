@@ -1,5 +1,40 @@
 export const translations = {
   fr: {
+    // Ajout des traductions pour l'écran des notifications
+    notifications: {
+      title: "Notifications",
+      loading: "Chargement des notifications...",
+      error: "Impossible de charger les notifications",
+      emptyTitle: "Aucune notification",
+      emptySubtitle: "Vous n'avez aucune notification non lue pour le moment.",
+      refreshButton: "Actualiser",
+      markAllAsRead: "Tout marquer comme lu",
+      markAsRead: "Marquer comme lu",
+      pay: "Payer",
+      time: "Le {date} à {time}",
+      notificationTypes: {
+        systeme: "Système",
+        paiement: "Paiement",
+        examen: "Examen",
+        resultat: "Résultat",
+        absence: "Absence",
+        message: "Message",
+        default: "Notification"
+      }
+    },
+    
+    // Ajout des traductions pour l'écran de détail de notification
+    notificationDetails: {
+      title: "Détails de la notification",
+      error: "Notification non trouvée",
+      additionalInfo: "Informations complémentaires",
+      meta: {
+        type: "Type",
+        priority: "Priorité",
+        channels: "Canaux"
+      }
+    },
+    
     welcome: {
       title: "Accédez au futur de l'éducation",
       button: "Commencer maintenant"
@@ -35,7 +70,15 @@ export const translations = {
       studentPlaceholder: "JB44405",
       parentInstructions: "Entrez votre numéro de téléphone associé à votre compte parent. Nous vous enverrons un code de vérification par SMS.",
       studentInstructions: "Entrez votre numéro matricule. Nous vous enverrons un code de vérification à votre adresse email.",
-      error: "Veuillez entrer votre identifiant"
+      error: "Veuillez entrer votre identifiant",
+      // Ajout pour la modal
+      modalTitle: "Mot de passe oublié",
+      modalMessage: "Vous avez oublié votre mot de passe ? Veuillez contacter le service informatique pour obtenir de l'aide.",
+      contactInfoTitle: "Service Informatique",
+      contactPhone: "+221 33 123 45 67",
+      contactEmail: "support@ecole.sn",
+      contactHours: "Lun-Ven: 8h-17h",
+      closeButton: "Fermer"
     },
     otp: {
       title: "Vérification OTP",
@@ -224,7 +267,15 @@ export const translations = {
       studentPlaceholder: "JB44405",
       parentInstructions: "Enter your phone number associated with your parent account. We will send a verification code via SMS.",
       studentInstructions: "Enter your student ID. We will send a verification code to your email address.",
-      error: "Please enter your identifier"
+      error: "Please enter your identifier",
+      // Ajout pour la modal
+      modalTitle: "Forgot Password",
+      modalMessage: "Have you forgotten your password? Please contact the IT service for assistance.",
+      contactInfoTitle: "IT Service",
+      contactPhone: "+221 33 123 45 67",
+      contactEmail: "support@ecole.sn",
+      contactHours: "Mon-Fri: 8am-5pm",
+      closeButton: "Close"
     },
     otp: {
       title: "OTP Verification",
@@ -375,6 +426,41 @@ export const translations = {
       thirdQuarter: "3rd quarter",
       gradeTable: "Grade Table",
       reportCards: "Report Cards"
-    }
+    },
+
+    notifications: {
+      title: "Notifications",
+      loading: "Loading notifications...",
+      error: "Unable to load notifications",
+      emptyTitle: "No notifications",
+      emptySubtitle: "You don't have any unread notifications at the moment.",
+      refreshButton: "Refresh",
+      markAllAsRead: "Mark all as read",
+      markAsRead: "Mark as read",
+      pay: "Pay",
+      time: "On {date} at {time}",
+      notificationTypes: {
+        systeme: "System",
+        paiement: "Payment",
+        examen: "Exam",
+        resultat: "Result",
+        absence: "Absence",
+        message: "Message",
+        default: "Notification"
+      }
+    },
+    
+    // Ajout des traductions pour l'écran de détail de notification
+    notificationDetails: {
+      title: "Notification Details",
+      error: "Notification not found",
+      additionalInfo: "Additional Information",
+      meta: {
+        type: "Type",
+        priority: "Priority",
+        channels: "Channels"
+      }
+    },
+    
   }
 };

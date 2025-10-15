@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,105 +7,272 @@ import {
   ScrollView,
   StatusBar,
   SafeAreaView,
+  ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useAuth } from '../contexts/AuthContext';
+import api from '../services/api';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function NotificationsScreen() {
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      icon: '📱',
-      title: 'Nouveau bulletin disponible',
-      date: '15/08',
-      time: '14:00',
-      type: 'info'
-    },
-    {
-      id: 2,
-      icon: '🏆',
-      title: 'Examen de Math demain à 9h',
-      date: '20/08',
-      time: '10:30',
-      type: 'exam'
-    },
-    {
-      id: 3,
-      icon: '😊',
-      title: 'Paiement reçu avec succès',
-      date: '14/08',
-      time: '18:00',
-      type: 'payment'
-    },
-    {
-      id: 4,
-      icon: '🏦',
-      title: 'Vous devez faire un versement avant le 18/08',
-      date: '14/08',
-      time: '16:00',
-      type: 'payment-reminder',
-      hasActions: true
-    }
-  ]);
-
+  const { user, showErrorToast, showSuccessToast } = useAuth();
+  const { t } = useLanguage();
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [hasNotifications, setHasNotifications] = useState(true);
 
-  const handlePay = (notificationId: any) => {
-    console.log(`Paying for notification ${notificationId}`);
+  // Charger les notifications non lues
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/notifications/etablissements/eleve/notifications/non-lues');
+      
+      if (response.data.success && response.data.data.length > 0) {
+        setNotifications(response.data.data);
+        setHasNotifications(true);
+      } else {
+        setNotifications([]);
+        setHasNotifications(false);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des notifications:', error);
+      showErrorToast('Erreur', t('notifications.error'));
+      setHasNotifications(false);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   };
 
-  const handleRemindLater = (notificationId: any) => {
-    console.log(`Remind later for notification ${notificationId}`);
+  // Marquer une notification comme lue
+  const markAsRead = async (notificationId) => {
+    try {
+      await api.put('/notifications/marquer-lues', {
+        notificationId: notificationId
+      });
+      
+      // Mettre à jour l'état local pour supprimer la notification
+      setNotifications(prev => prev.filter(notif => notif._id !== notificationId));
+      
+      // Vérifier s'il reste des notifications
+      if (notifications.length === 1) {
+        setHasNotifications(false);
+      }
+      
+      showSuccessToast('Succès', t('notifications.markAsRead'));
+    } catch (error) {
+      console.error('Erreur lors du marquage de la notification:', error);
+      showErrorToast('Erreur', 'Impossible de marquer la notification comme lue');
+    }
+  };
+
+  // Marquer toutes les notifications comme lues
+  const markAllAsRead = async () => {
+    try {
+      const notificationIds = notifications.map(notification => notification._id);
+      
+      await api.put('/notifications/marquer-lues', {
+        ids: notificationIds
+      });
+      
+      setNotifications([]);
+      setHasNotifications(false);
+      showSuccessToast('Succès', t('notifications.markAllAsRead'));
+    } catch (error) {
+      console.error('Erreur lors du marquage des notifications:', error);
+      showErrorToast('Erreur', 'Impossible de marquer toutes les notifications comme lues');
+    }
+  };
+
+  // Voir les détails d'une notification
+  const viewNotificationDetails = async (notificationId) => {
+    try {
+      const response = await api.get(`/notifications/${notificationId}`);
+      
+      if (response.data.success) {
+        // Naviguer vers l'écran de détails avec les données de la notification
+        router.push({
+          pathname: '/notification_detail',
+          params: { 
+            notification: JSON.stringify(response.data.data) 
+          }
+        });
+        
+        // Marquer comme lue après avoir consulté les détails
+        markAsRead(notificationId);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la récupération des détails:', error);
+      showErrorToast('Erreur', 'Impossible de charger les détails de la notification');
+    }
+  };
+
+  // Gérer le rafraîchissement
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchNotifications();
+  };
+
+  // Charger les notifications au démarrage
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  // Formater la date
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  // Formater l'heure
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('fr-FR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Obtenir l'icône en fonction du type de notification
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'systeme':
+        return '📱';
+      case 'paiement':
+        return '💳';
+      case 'examen':
+        return '📝';
+      case 'resultat':
+        return '🏆';
+      case 'absence':
+        return '📅';
+      case 'message':
+        return '💬';
+      default:
+        return '📢';
+    }
   };
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
       <View style={styles.emptyIcon}>
-        <Ionicons name="tv-outline" size={60} color="#007AFF" />
+        <Ionicons name="notifications-off-outline" size={60} color="#007AFF" />
       </View>
-      <Text style={styles.emptyTitle}>Aucune notification</Text>
+      <Text style={styles.emptyTitle}>{t('notifications.emptyTitle')}</Text>
       <Text style={styles.emptySubtitle}>
-        Vous avez déjà tout lu concernant les notifications.
+        {t('notifications.emptySubtitle')}
       </Text>
+      <TouchableOpacity 
+        style={styles.refreshButton}
+        onPress={handleRefresh}
+      >
+        <Ionicons name="refresh-outline" size={20} color="#007AFF" />
+        <Text style={styles.refreshButtonText}>{t('notifications.refreshButton')}</Text>
+      </TouchableOpacity>
     </View>
   );
 
   const renderNotifications = () => (
-    <ScrollView style={styles.notificationsList} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={styles.notificationsList}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          colors={['#007AFF']}
+          tintColor="#007AFF"
+        />
+      }
+    >
+      {notifications.length > 1 && (
+        <View style={styles.actionsHeader}>
+          <TouchableOpacity 
+            style={styles.markAllButton}
+            onPress={markAllAsRead}
+          >
+            <Text style={styles.markAllButtonText}>{t('notifications.markAllAsRead')}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      
       {notifications.map((notification) => (
-        <View key={notification.id} style={styles.notificationItem}>
+        <TouchableOpacity 
+          key={notification._id} 
+          style={styles.notificationItem}
+          onPress={() => viewNotificationDetails(notification._id)}
+        >
           <View style={styles.notificationIcon}>
-            <Text style={styles.emoji}>{notification.icon}</Text>
+            <Text style={styles.emoji}>
+              {getNotificationIcon(notification.type)}
+            </Text>
           </View>
           
           <View style={styles.notificationContent}>
-            <Text style={styles.notificationTitle}>{notification.title}</Text>
+            <Text style={styles.notificationTitle}>{notification.titre}</Text>
+            <Text style={styles.notificationMessage}>{notification.message}</Text>
             <Text style={styles.notificationTime}>
-              {notification.date}, {notification.time}
+              {t('notifications.time', { 
+                date: formatDate(notification.dateEnvoi), 
+                time: formatTime(notification.dateEnvoi) 
+              })}
             </Text>
             
-            {notification.hasActions && (
-              <View style={styles.actionButtons}>
+            <View style={styles.actionButtons}>
+              <TouchableOpacity 
+                style={styles.readButton}
+                onPress={(e) => {
+                  e.stopPropagation(); // Empêcher la propagation vers le parent
+                  markAsRead(notification._id);
+                }}
+              >
+                <Text style={styles.readButtonText}>{t('notifications.markAsRead')}</Text>
+              </TouchableOpacity>
+              
+              {notification.type === 'paiement' && (
                 <TouchableOpacity 
                   style={styles.payButton}
-                  onPress={() => handlePay(notification.id)}
+                  onPress={(e) => {
+                    e.stopPropagation(); // Empêcher la propagation vers le parent
+                    router.push('/payment');
+                  }}
                 >
-                  <Text style={styles.payButtonText}>Payer</Text>
+                  <Text style={styles.payButtonText}>{t('notifications.pay')}</Text>
                 </TouchableOpacity>
-                
-                <TouchableOpacity 
-                  style={styles.remindButton}
-                  onPress={() => handleRemindLater(notification.id)}
-                >
-                  <Text style={styles.remindButtonText}>Me rappeler</Text>
-                </TouchableOpacity>
-              </View>
-            )}
+              )}
+            </View>
           </View>
-        </View>
+        </TouchableOpacity>
       ))}
     </ScrollView>
   );
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="white" />
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton}>
+            <Ionicons name="chevron-back" size={24} color="#333" onPress={() => router.push('home')} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{t('notifications.title')}</Text>
+          <View style={styles.placeholder} />
+        </View>
+        
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={styles.loadingText}>{t('notifications.loading')}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -116,8 +283,10 @@ export default function NotificationsScreen() {
         <TouchableOpacity style={styles.backButton}>
           <Ionicons name="chevron-back" size={24} color="#333" onPress={() => router.push('home')} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Notifications</Text>
-        <View style={styles.placeholder} />
+        <Text style={styles.headerTitle}>{t('notifications.title')}</Text>
+        <TouchableOpacity onPress={handleRefresh}>
+          <Ionicons name="refresh-outline" size={24} color="#007AFF" />
+        </TouchableOpacity>
       </View>
 
       {hasNotifications ? renderNotifications() : renderEmptyState()}
@@ -152,6 +321,17 @@ const styles = StyleSheet.create({
   placeholder: {
     width: 24,
   },
+  // Loading State
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+  },
   // Empty State Styles
   emptyContainer: {
     flex: 1,
@@ -173,11 +353,46 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     lineHeight: 20,
+    marginBottom: 30,
+  },
+  refreshButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f0f8ff',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#007AFF',
+  },
+  refreshButtonText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '500',
   },
   // Notifications List Styles
   notificationsList: {
     flex: 1,
     backgroundColor: 'white',
+  },
+  actionsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f5f5f5',
+  },
+  markAllButton: {
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+  },
+  markAllButtonText: {
+    fontSize: 14,
+    color: '#007AFF',
+    fontWeight: '500',
   },
   notificationItem: {
     flexDirection: 'row',
@@ -201,10 +416,16 @@ const styles = StyleSheet.create({
   },
   notificationTitle: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#333',
     marginBottom: 5,
     lineHeight: 22,
+  },
+  notificationMessage: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+    lineHeight: 20,
   },
   notificationTime: {
     fontSize: 12,
@@ -213,28 +434,28 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: 'row',
-    marginTop: 10,
+    marginTop: 5,
   },
-  payButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 20,
+  readButton: {
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 6,
     marginRight: 10,
   },
-  payButtonText: {
-    color: 'white',
+  readButtonText: {
+    color: '#666',
     fontSize: 14,
     fontWeight: '500',
   },
-  remindButton: {
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 20,
+  payButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 6,
   },
-  remindButtonText: {
-    color: '#666',
+  payButtonText: {
+    color: 'white',
     fontSize: 14,
     fontWeight: '500',
   },
