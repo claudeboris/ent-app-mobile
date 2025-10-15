@@ -96,12 +96,12 @@ export default function PresenceScreen() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{t('presence.title')}</Text>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.headerButton}>
+          {/* <TouchableOpacity style={styles.headerButton}>
             <Ionicons name="search-outline" size={24} color="#666" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.headerButton}>
             <Ionicons name="bookmark-outline" size={24} color="#666" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </View>
       

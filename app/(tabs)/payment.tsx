@@ -374,10 +374,10 @@ const PaiementsScreen = () => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Paiements</Text>
         <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconButton}>
+         {/*  <TouchableOpacity style={styles.iconButton}>
             <Ionicons name="search-outline" size={24} color="#333" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
+          </TouchableOpacity> */}
+          <TouchableOpacity style={styles.iconButton} onPress={() => router.push('notification')}>
             <Ionicons name="notifications-outline" size={24} color="#333" />
           </TouchableOpacity>
         </View>
