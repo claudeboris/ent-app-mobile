@@ -248,12 +248,12 @@ const PaiementsScreen = () => {
               ))}
             </View>
             
-            <TouchableOpacity 
+            {/* <TouchableOpacity 
               style={styles.payerTotalButton}
               onPress={() => openModal('montant', { montant: montantRestant, nom: 'Totalité' })}
             >
               <Text style={styles.payerTotalButtonText}>Payer la totalité ({montantRestant.toLocaleString()} F)</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         );
         
@@ -404,7 +404,7 @@ const PaiementsScreen = () => {
         </View>
         
         {/* Montants */}
-        <View style={styles.montantsContainer}>
+        {/* <View style={styles.montantsContainer}>
           <View style={styles.montantCard}>
             <View style={styles.montantHeader}>
               <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
@@ -422,7 +422,7 @@ const PaiementsScreen = () => {
               {montantRestant.toLocaleString()} F
             </Text>
           </View>
-        </View>
+        </View> */}
         
         {/* Onglets */}
         <View style={styles.tabsContainer}>
