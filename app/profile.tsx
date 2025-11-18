@@ -9,11 +9,14 @@ import {
   StatusBar,
   SafeAreaView,
   TextInput,
-  ActivityIndicator
+  ActivityIndicator,
+  Modal,
+  Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext'; // Import du contexte de langue
 import api from '../services/api';
 
 export default function ProfileScreen() {
@@ -23,14 +26,15 @@ export default function ProfileScreen() {
     logout, 
     updateUser,
     showSuccessToast,
-    showErrorToast,
-    showConfirmToast
+    showErrorToast
   } = useAuth();
   
+  const { t } = useLanguage(); // Hook pour les traductions
   const [activeTab, setActiveTab] = useState('infos');
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [profileData, setProfileData] = useState(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   
   // États pour les données modifiables
   const [editedInfo, setEditedInfo] = useState({
@@ -79,11 +83,11 @@ export default function ProfileScreen() {
           prenom: user.prenom || '',
           email: user.email || '',
           telephone: user.telephone || '',
-          adresse: user.adresse || 'Ajouter un lieu',
+          adresse: user.adresse || t('profile.addLocation'),
         });
       } catch (error) {
         console.error('Erreur lors du chargement du profil', error);
-        showErrorToast('Erreur', 'Impossible de charger les données du profil');
+        showErrorToast(t('error.title'), t('profile.loadingError'));
       } finally {
         setIsLoading(false);
       }
@@ -121,10 +125,10 @@ export default function ProfileScreen() {
       await updateUser(updatedUser);
       
       setIsEditMode(false);
-      showSuccessToast('Succès', 'Vos informations ont été mises à jour');
+      showSuccessToast(t('common.success'), t('profile.updateSuccess'));
     } catch (error) {
       console.error('Erreur lors de la mise à jour', error);
-      showErrorToast('Erreur', 'Impossible de mettre à jour vos informations');
+      showErrorToast(t('error.title'), t('profile.updateError'));
     } finally {
       setIsLoading(false);
     }
@@ -137,18 +141,22 @@ export default function ProfileScreen() {
       prenom: user.prenom || '',
       email: user.email || '',
       telephone: user.telephone || '',
-      adresse: user.adresse || 'Ajouter un lieu',
+      adresse: user.adresse || t('profile.addLocation'),
     });
     setIsEditMode(false);
   };
 
   const handleLogout = () => {
-    showConfirmToast(
-      'Déconnexion', 
-      'Êtes-vous sûr de vouloir vous déconnecter ?', 
-      logout,
-      () => Toast.hide()
-    );
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    logout();
+    setShowLogoutModal(false);
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutModal(false);
   };
 
   // Fonctions pour le formulaire de mot de passe
@@ -178,19 +186,19 @@ export default function ProfileScreen() {
     const errors = {};
     
     if (!passwordData.currentPassword) {
-      errors.currentPassword = "Veuillez entrer votre mot de passe actuel";
+      errors.currentPassword = t('profile.passwordErrors.currentRequired');
     }
     
     if (!passwordData.newPassword) {
-      errors.newPassword = "Veuillez entrer un nouveau mot de passe";
+      errors.newPassword = t('profile.passwordErrors.newRequired');
     } else if (passwordData.newPassword.length < 8) {
-      errors.newPassword = "Le mot de passe doit contenir au moins 8 caractères";
+      errors.newPassword = t('profile.passwordErrors.tooShort');
     }
     
     if (!passwordData.confirmPassword) {
-      errors.confirmPassword = "Veuillez confirmer votre nouveau mot de passe";
+      errors.confirmPassword = t('profile.passwordErrors.confirmRequired');
     } else if (passwordData.newPassword !== passwordData.confirmPassword) {
-      errors.confirmPassword = "Les mots de passe ne correspondent pas";
+      errors.confirmPassword = t('profile.passwordErrors.mismatch');
     }
     
     setPasswordErrors(errors);
@@ -214,7 +222,7 @@ export default function ProfileScreen() {
         newPassword: passwordData.newPassword
       });
       
-      showSuccessToast('Succès', 'Votre mot de passe a été mis à jour avec succès');
+      showSuccessToast(t('common.success'), t('profile.passwordUpdateSuccess'));
       setShowPasswordForm(false);
       setPasswordData({
         currentPassword: '',
@@ -223,8 +231,8 @@ export default function ProfileScreen() {
       });
     } catch (error) {
       console.error('Erreur lors du changement de mot de passe', error);
-      const errorMessage = error.response?.data?.message || 'Impossible de changer votre mot de passe';
-      showErrorToast('Erreur', errorMessage);
+      const errorMessage = error.response?.data?.message || t('profile.passwordUpdateError');
+      showErrorToast(t('error.title'), errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -232,17 +240,17 @@ export default function ProfileScreen() {
 
   const renderPasswordForm = () => (
     <View style={styles.passwordFormContainer}>
-      <Text style={styles.passwordFormTitle}>Changer votre mot de passe</Text>
+      <Text style={styles.passwordFormTitle}>{t('profile.changePassword')}</Text>
       
       {/* Current Password */}
       <View style={styles.passwordInputContainer}>
-        <Text style={styles.passwordInputLabel}>Mot de passe actuel</Text>
+        <Text style={styles.passwordInputLabel}>{t('profile.currentPassword')}</Text>
         <View style={styles.passwordInputWrapper}>
           <TextInput
             style={styles.passwordInput}
             value={passwordData.currentPassword}
             onChangeText={(value) => handlePasswordChange('currentPassword', value)}
-            placeholder="Entrez votre mot de passe actuel"
+            placeholder={t('profile.enterCurrentPassword')}
             secureTextEntry={!showPasswords.current}
           />
           <TouchableOpacity 
@@ -263,13 +271,13 @@ export default function ProfileScreen() {
       
       {/* New Password */}
       <View style={styles.passwordInputContainer}>
-        <Text style={styles.passwordInputLabel}>Nouveau mot de passe</Text>
+        <Text style={styles.passwordInputLabel}>{t('profile.newPassword')}</Text>
         <View style={styles.passwordInputWrapper}>
           <TextInput
             style={styles.passwordInput}
             value={passwordData.newPassword}
             onChangeText={(value) => handlePasswordChange('newPassword', value)}
-            placeholder="Entrez votre nouveau mot de passe"
+            placeholder={t('profile.enterNewPassword')}
             secureTextEntry={!showPasswords.new}
           />
           <TouchableOpacity 
@@ -286,18 +294,18 @@ export default function ProfileScreen() {
         {passwordErrors.newPassword && (
           <Text style={styles.errorText}>{passwordErrors.newPassword}</Text>
         )}
-        <Text style={styles.passwordHint}>Le mot de passe doit contenir au moins 8 caractères</Text>
+        <Text style={styles.passwordHint}>{t('profile.passwordHint')}</Text>
       </View>
       
       {/* Confirm Password */}
       <View style={styles.passwordInputContainer}>
-        <Text style={styles.passwordInputLabel}>Confirmer le nouveau mot de passe</Text>
+        <Text style={styles.passwordInputLabel}>{t('profile.confirmPassword')}</Text>
         <View style={styles.passwordInputWrapper}>
           <TextInput
             style={styles.passwordInput}
             value={passwordData.confirmPassword}
             onChangeText={(value) => handlePasswordChange('confirmPassword', value)}
-            placeholder="Confirmez votre nouveau mot de passe"
+            placeholder={t('profile.confirmNewPassword')}
             secureTextEntry={!showPasswords.confirm}
           />
           <TouchableOpacity 
@@ -318,10 +326,10 @@ export default function ProfileScreen() {
       
       {/* Password Requirements */}
       <View style={styles.passwordRequirements}>
-        <Text style={styles.requirementsTitle}>Exigences de sécurité:</Text>
-        <Text style={styles.requirementItem}>• Au moins 8 caractères</Text>
-        <Text style={styles.requirementItem}>• Mélange de lettres et de chiffres recommandé</Text>
-        <Text style={styles.requirementItem}>• Éviter les mots de passe évidents</Text>
+        <Text style={styles.requirementsTitle}>{t('profile.securityRequirements')}</Text>
+        <Text style={styles.requirementItem}>• {t('profile.requirements.minLength')}</Text>
+        <Text style={styles.requirementItem}>• {t('profile.requirements.mixRecommended')}</Text>
+        <Text style={styles.requirementItem}>• {t('profile.requirements.avoidObvious')}</Text>
       </View>
       
       {/* Form Actions */}
@@ -338,7 +346,7 @@ export default function ProfileScreen() {
             setPasswordErrors({});
           }}
         >
-          <Text style={styles.cancelPasswordButtonText}>Annuler</Text>
+          <Text style={styles.cancelPasswordButtonText}>{t('common.cancel')}</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.submitPasswordButton} 
@@ -348,7 +356,7 @@ export default function ProfileScreen() {
           {isLoading ? (
             <ActivityIndicator size="small" color="white" />
           ) : (
-            <Text style={styles.submitPasswordButtonText}>Mettre à jour</Text>
+            <Text style={styles.submitPasswordButtonText}>{t('common.update')}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -363,13 +371,13 @@ export default function ProfileScreen() {
           <Ionicons name="person-outline" size={20} color="#666" />
         </View>
         <View style={styles.infoContent}>
-          <Text style={styles.infoLabel}>Nom</Text>
+          <Text style={styles.infoLabel}>{t('profile.name')}</Text>
           {isEditMode ? (
             <TextInput
               style={styles.textInput}
               value={editedInfo.nom}
               onChangeText={(text) => setEditedInfo({...editedInfo, nom: text})}
-              placeholder="Votre nom"
+              placeholder={t('profile.yourName')}
             />
           ) : (
             <Text style={styles.infoValue}>{user?.nom}</Text>
@@ -383,13 +391,13 @@ export default function ProfileScreen() {
           <Ionicons name="person-outline" size={20} color="#666" />
         </View>
         <View style={styles.infoContent}>
-          <Text style={styles.infoLabel}>Prénom</Text>
+          <Text style={styles.infoLabel}>{t('profile.firstName')}</Text>
           {isEditMode ? (
             <TextInput
               style={styles.textInput}
               value={editedInfo.prenom}
               onChangeText={(text) => setEditedInfo({...editedInfo, prenom: text})}
-              placeholder="Votre prénom"
+              placeholder={t('profile.yourFirstName')}
             />
           ) : (
             <Text style={styles.infoValue}>{user?.prenom}</Text>
@@ -403,13 +411,13 @@ export default function ProfileScreen() {
           <Ionicons name="mail-outline" size={20} color="#666" />
         </View>
         <View style={styles.infoContent}>
-          <Text style={styles.infoLabel}>Email</Text>
+          <Text style={styles.infoLabel}>{t('profile.email')}</Text>
           {isEditMode ? (
             <TextInput
               style={styles.textInput}
               value={editedInfo.email}
               onChangeText={(text) => setEditedInfo({...editedInfo, email: text})}
-              placeholder="Votre email"
+              placeholder={t('profile.yourEmail')}
               keyboardType="email-address"
             />
           ) : (
@@ -424,13 +432,13 @@ export default function ProfileScreen() {
           <Ionicons name="call-outline" size={20} color="#666" />
         </View>
         <View style={styles.infoContent}>
-          <Text style={styles.infoLabel}>Numéro de téléphone</Text>
+          <Text style={styles.infoLabel}>{t('profile.phone')}</Text>
           {isEditMode ? (
             <TextInput
               style={styles.textInput}
               value={editedInfo.telephone}
               onChangeText={(text) => setEditedInfo({...editedInfo, telephone: text})}
-              placeholder="Votre numéro de téléphone"
+              placeholder={t('profile.yourPhone')}
               keyboardType="phone-pad"
             />
           ) : (
@@ -445,18 +453,18 @@ export default function ProfileScreen() {
           <Ionicons name="location-outline" size={20} color="#666" />
         </View>
         <View style={styles.infoContent}>
-          <Text style={styles.infoLabel}>Adresse</Text>
+          <Text style={styles.infoLabel}>{t('profile.address')}</Text>
           {isEditMode ? (
             <TextInput
               style={styles.textInput}
               value={editedInfo.adresse}
               onChangeText={(text) => setEditedInfo({...editedInfo, adresse: text})}
-              placeholder="Votre adresse"
+              placeholder={t('profile.yourAddress')}
               multiline
             />
           ) : (
             <Text style={[styles.infoValue, !user?.adresse && styles.placeholderText]}>
-              {user?.adresse || 'Ajouter un lieu'}
+              {user?.adresse || t('profile.addLocation')}
             </Text>
           )}
         </View>
@@ -472,8 +480,8 @@ export default function ProfileScreen() {
             <Ionicons name="lock-closed-outline" size={20} color="#666" />
           </View>
           <View style={styles.infoContent}>
-            <Text style={styles.infoLabel}>Mot de passe</Text>
-            <Text style={[styles.infoValue, styles.linkText]}>Modifier le mot de passe</Text>
+            <Text style={styles.infoLabel}>{t('profile.password')}</Text>
+            <Text style={[styles.infoValue, styles.linkText]}>{t('profile.changePassword')}</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color="#ccc" />
         </TouchableOpacity>
@@ -490,10 +498,10 @@ export default function ProfileScreen() {
       {isEditMode && (
         <View style={styles.editActions}>
           <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-            <Text style={styles.cancelButtonText}>Annuler</Text>
+            <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>Sauvegarder</Text>
+            <Text style={styles.saveButtonText}>{t('common.save')}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -504,10 +512,10 @@ export default function ProfileScreen() {
     if (!profileData || !profileData.enfants || profileData.enfants.length === 0) {
       return (
         <View style={styles.tabContent}>
-          <Text style={styles.noDataText}>Aucun enfant associé à ce compte</Text>
+          <Text style={styles.noDataText}>{t('profile.noChildren')}</Text>
           <TouchableOpacity style={styles.addChildButton}>
             <Ionicons name="add-circle-outline" size={24} color="#007AFF" />
-            <Text style={styles.addChildText}>Ajouter un enfant</Text>
+            <Text style={styles.addChildText}>{t('profile.addChild')}</Text>
           </TouchableOpacity>
         </View>
       );
@@ -526,10 +534,10 @@ export default function ProfileScreen() {
               style={styles.childImage}
             />
             <View style={styles.childInfo}>
-              <Text style={styles.childName}>{child.utilisateur?.nomComplet || 'Nom non disponible'}</Text>
-              <Text style={styles.childRole}>Élève</Text>
+              <Text style={styles.childName}>{child.utilisateur?.nomComplet || t('profile.nameNotAvailable')}</Text>
+              <Text style={styles.childRole}>{t('profile.student')}</Text>
               <Text style={styles.childClass}>
-                Classe: {child.utilisateur?.informationsSpecifiques?.classeActuelle?.nom || 'À déterminer'}
+                {t('profile.class')}: {child.utilisateur?.informationsSpecifiques?.classeActuelle?.nom || t('profile.toBeDetermined')}
               </Text>
             </View>
             <TouchableOpacity style={styles.childMenuButton}>
@@ -541,7 +549,7 @@ export default function ProfileScreen() {
         {/* Add Child Button */}
         <TouchableOpacity style={styles.addChildButton}>
           <Ionicons name="add-circle-outline" size={24} color="#007AFF" />
-          <Text style={styles.addChildText}>Ajouter un enfant</Text>
+          <Text style={styles.addChildText}>{t('profile.addChild')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -557,7 +565,7 @@ export default function ProfileScreen() {
       <View style={styles.tabContent}>
         {/* Medical Information */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Informations médicales</Text>
+          <Text style={styles.sectionTitle}>{t('profile.medicalInfo')}</Text>
           
           {eleve.informationsMedicales?.allergies && eleve.informationsMedicales.allergies.length > 0 && (
             <View style={styles.infoItem}>
@@ -565,7 +573,7 @@ export default function ProfileScreen() {
                 <Ionicons name="medical-outline" size={20} color="#666" />
               </View>
               <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Allergies</Text>
+                <Text style={styles.infoLabel}>{t('profile.allergies')}</Text>
                 <Text style={styles.infoValue}>
                   {eleve.informationsMedicales.allergies.join(', ')}
                 </Text>
@@ -579,7 +587,7 @@ export default function ProfileScreen() {
                 <Ionicons name="heart-outline" size={20} color="#666" />
               </View>
               <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Maladies chroniques</Text>
+                <Text style={styles.infoLabel}>{t('profile.chronicDiseases')}</Text>
                 <Text style={styles.infoValue}>
                   {eleve.informationsMedicales.maladiesChroniques.join(', ')}
                 </Text>
@@ -590,16 +598,16 @@ export default function ProfileScreen() {
         
         {/* School Information */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Informations scolaires</Text>
+          <Text style={styles.sectionTitle}>{t('profile.schoolInfo')}</Text>
           
           <View style={styles.infoItem}>
             <View style={styles.iconContainer}>
               <Ionicons name="school-outline" size={20} color="#666" />
             </View>
             <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Classe actuelle</Text>
+              <Text style={styles.infoLabel}>{t('profile.currentClass')}</Text>
               <Text style={styles.infoValue}>
-                {utilisateur?.informationsSpecifiques?.classeActuelle?.nom || 'Non définie'}
+                {utilisateur?.informationsSpecifiques?.classeActuelle?.nom || t('profile.notDefined')}
               </Text>
             </View>
           </View>
@@ -609,9 +617,9 @@ export default function ProfileScreen() {
               <Ionicons name="card-outline" size={20} color="#666" />
             </View>
             <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Numéro matricule</Text>
+              <Text style={styles.infoLabel}>{t('profile.studentId')}</Text>
               <Text style={styles.infoValue}>
-                {utilisateur?.informationsSpecifiques?.numeroMatricule || 'Non défini'}
+                {utilisateur?.informationsSpecifiques?.numeroMatricule || t('profile.notDefined')}
               </Text>
             </View>
           </View>
@@ -621,9 +629,9 @@ export default function ProfileScreen() {
               <Ionicons name="repeat-outline" size={20} color="#666" />
             </View>
             <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Redoublant</Text>
+              <Text style={styles.infoLabel}>{t('profile.repeating')}</Text>
               <Text style={styles.infoValue}>
-                {utilisateur?.informationsSpecifiques?.redoublant ? 'Oui' : 'Non'}
+                {utilisateur?.informationsSpecifiques?.redoublant ? t('common.yes') : t('common.no')}
               </Text>
             </View>
           </View>
@@ -631,16 +639,16 @@ export default function ProfileScreen() {
         
         {/* Services */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Services</Text>
+          <Text style={styles.sectionTitle}>{t('profile.services')}</Text>
           
           <View style={styles.infoItem}>
             <View style={styles.iconContainer}>
               <Ionicons name="bus-outline" size={20} color="#666" />
             </View>
             <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Transport scolaire</Text>
+              <Text style={styles.infoLabel}>{t('profile.schoolTransport')}</Text>
               <Text style={styles.infoValue}>
-                {eleve.utiliseTransport ? 'Oui' : 'Non'}
+                {eleve.utiliseTransport ? t('common.yes') : t('common.no')}
               </Text>
             </View>
           </View>
@@ -651,8 +659,8 @@ export default function ProfileScreen() {
                 <Ionicons name="location-outline" size={20} color="#666" />
               </View>
               <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Arrêt</Text>
-                <Text style={styles.infoValue}>{eleve.arret || 'Non défini'}</Text>
+                <Text style={styles.infoLabel}>{t('profile.stop')}</Text>
+                <Text style={styles.infoValue}>{eleve.arret || t('profile.notDefined')}</Text>
               </View>
             </View>
           )}
@@ -662,9 +670,9 @@ export default function ProfileScreen() {
               <Ionicons name="restaurant-outline" size={20} color="#666" />
             </View>
             <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Cantine</Text>
+              <Text style={styles.infoLabel}>{t('profile.canteen')}</Text>
               <Text style={styles.infoValue}>
-                {eleve.utiliseCantine ? 'Oui' : 'Non'}
+                {eleve.utiliseCantine ? t('common.yes') : t('common.no')}
               </Text>
             </View>
           </View>
@@ -675,7 +683,7 @@ export default function ProfileScreen() {
                 <Ionicons name="nutrition-outline" size={20} color="#666" />
               </View>
               <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Régime alimentaire</Text>
+                <Text style={styles.infoLabel}>{t('profile.diet')}</Text>
                 <Text style={styles.infoValue}>
                   {eleve.regimeAlimentaire.join(', ')}
                 </Text>
@@ -689,9 +697,9 @@ export default function ProfileScreen() {
                 <Ionicons name="cash-outline" size={20} color="#666" />
               </View>
               <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Bourse</Text>
+                <Text style={styles.infoLabel}>{t('profile.scholarship')}</Text>
                 <Text style={styles.infoValue}>
-                  {eleve.pourcentageBourse}% de bourse
+                  {eleve.pourcentageBourse}% {t('profile.scholarship')}
                 </Text>
               </View>
             </View>
@@ -707,7 +715,7 @@ export default function ProfileScreen() {
         <StatusBar barStyle="dark-content" backgroundColor="white" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Chargement du profil...</Text>
+          <Text style={styles.loadingText}>{t('profile.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -722,10 +730,10 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.push('home')}>
           <Ionicons name="chevron-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mon profil</Text>
+        <Text style={styles.headerTitle}>{t('profile.myProfile')}</Text>
         <TouchableOpacity onPress={isEditMode ? handleCancel : handleEdit}>
           <Text style={[styles.modifyButton, isEditMode && styles.cancelHeaderButton]}>
-            {isEditMode ? 'Annuler' : 'Modifier'}
+            {isEditMode ? t('common.cancel') : t('common.edit')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -751,7 +759,7 @@ export default function ProfileScreen() {
           <View style={styles.profileInfo}>
             <Text style={styles.userName}>{user?.nomComplet}</Text>
             <Text style={styles.userRole}>
-              {profileType === 'parent' ? 'Parent' : 'Élève'}
+              {profileType === 'parent' ? t('profile.parent') : t('profile.student')}
             </Text>
           </View>
         </View>
@@ -772,7 +780,7 @@ export default function ProfileScreen() {
                 styles.tabText, 
                 activeTab === 'infos' && styles.activeTabText
               ]}>
-                Infos personnelles
+                {t('profile.personalInfo')}
               </Text>
             </TouchableOpacity>
             
@@ -790,7 +798,7 @@ export default function ProfileScreen() {
                   styles.tabText,
                   activeTab === 'enfants' && styles.activeTabText
                 ]}>
-                  Enfants
+                  {t('profile.children')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -809,7 +817,7 @@ export default function ProfileScreen() {
                   styles.tabText,
                   activeTab === 'scolaire' && styles.activeTabText
                 ]}>
-                  Scolaire
+                  {t('profile.school')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -827,10 +835,44 @@ export default function ProfileScreen() {
         <View style={styles.footer}>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={20} color="white" />
-            <Text style={styles.logoutText}>Se déconnecter</Text>
+            <Text style={styles.logoutText}>{t('profile.logout')}</Text>
           </TouchableOpacity>
         </View>
       )}
+      
+      {/* Logout Confirmation Modal */}
+      <Modal
+        transparent={true}
+        visible={showLogoutModal}
+        animationType="fade"
+        onRequestClose={cancelLogout}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Ionicons name="log-out-outline" size={40} color="#FF5252" />
+              <Text style={styles.modalTitle}>{t('profile.logout')}</Text>
+            </View>
+            <Text style={styles.modalMessage}>
+              {t('profile.logoutConfirmation')}
+            </Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity 
+                style={styles.modalCancelButton} 
+                onPress={cancelLogout}
+              >
+                <Text style={styles.modalCancelText}>{t('common.cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.modalConfirmButton} 
+                onPress={confirmLogout}
+              >
+                <Text style={styles.modalConfirmText}>{t('profile.logout')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1234,6 +1276,71 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   submitPasswordButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '85%',
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 12,
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  modalCancelButton: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  modalCancelText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  modalConfirmButton: {
+    flex: 1,
+    backgroundColor: '#FF5252',
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginLeft: 10,
+  },
+  modalConfirmText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',

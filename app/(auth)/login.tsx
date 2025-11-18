@@ -86,8 +86,8 @@ export default function LoginScreen() {
     try {
       // Préparer les credentials selon le type de profil
       const credentials = profileType === 'parent' 
-        ? { telephone: identifier, motDePasse: password }
-        : { numeroMatricule: identifier, motDePasse: password };
+        ? { telephone: identifier.trim(), motDePasse: password.trim() }
+        : { numeroMatricule: identifier.trim(), motDePasse: password.trim() };
         console.log('data', {credentials, password})
       
       const result = await login(credentials, profileType);

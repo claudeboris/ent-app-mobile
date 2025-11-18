@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "685194862601",
+    "project_id": "kalanso-8a676",
+    "storage_bucket": "kalanso-8a676.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:685194862601:android:af6e5a18dc8ec2fb05d8d8",
+        "android_client_info": {
+          "package_name": "com.example.kalansoAndroid"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBv0tt6ueG1MACNgNQRqZ9KMKxNhounNdQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

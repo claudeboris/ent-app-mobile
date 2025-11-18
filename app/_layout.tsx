@@ -10,6 +10,7 @@ import { LanguageProvider } from '@/contexts/LanguageContext';
 import { View, ActivityIndicator } from 'react-native';
 import Toast from 'react-native-toast-message';
 import toastConfig from '../utils/toastConfig';
+import { NotificationProvider } from '../contexts/NotificationContext'
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -28,24 +29,26 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <Stack>
-          {/* Routes publiques - accessibles sans connexion */}
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          
-          {/* Routes d'authentification */}
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          
-          {/* Routes protégées - nécessitent une connexion */}
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="profile" options={{ headerShown: false }} />
-          <Stack.Screen name="notification" options={{ headerShown: false }} />
-          <Stack.Screen name="school_guide" options={{ headerShown: false }} />
-          <Stack.Screen name="transaction_detail" options={{ headerShown: false }} />
-          <Stack.Screen name="notification_detail" options={{ headerShown: false }} />
-          <Stack.Screen name="evenement_detail" options={{ headerShown: false }} />
-        </Stack>
-        <Toast config={toastConfig} />
-        <StatusBar style="auto" />
+        <NotificationProvider>
+          <Stack>
+            {/* Routes publiques - accessibles sans connexion */}
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            
+            {/* Routes d'authentification */}
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            
+            {/* Routes protégées - nécessitent une connexion */}
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="profile" options={{ headerShown: false }} />
+            <Stack.Screen name="notification" options={{ headerShown: false }} />
+            <Stack.Screen name="school_guide" options={{ headerShown: false }} />
+            <Stack.Screen name="transaction_detail" options={{ headerShown: false }} />
+            <Stack.Screen name="notification_detail" options={{ headerShown: false }} />
+            <Stack.Screen name="evenement_detail" options={{ headerShown: false }} />
+          </Stack>
+          <Toast config={toastConfig} />
+          <StatusBar style="auto" />
+        </NotificationProvider>
       </LanguageProvider>
     </AuthProvider>
   );

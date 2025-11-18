@@ -7,21 +7,27 @@
     "icon": "./assets/images/icon.png",
     "scheme": "educatifapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.boriso.educatifApp",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": ["remote-notification"]
+      },
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "bundleIdentifier": "com.example.kalansoIos"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "package": "com.boriso.educatifApp"
+      "googleServicesFile": "./google-services.json",
+      "package": "com.boriso.educatifApp",
+      "notification": {
+        "icon": "./assets/images/adaptive-icon.png",
+        "color": "#FF6B6B"
+      }
     },
     "web": {
       "bundler": "metro",
@@ -30,6 +36,13 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/logo.png",
+          "color": "#ffffff"
+        }
+      ],
       [
         "expo-splash-screen",
         {

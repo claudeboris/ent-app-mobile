@@ -19,6 +19,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import api from '../../../services/api';
 import { url } from '@/constants/url';
+import { useNotifications } from '../../../contexts/NotificationContext';
 
 const { width } = Dimensions.get('window');
 
@@ -106,7 +107,7 @@ const AssignmentCard = ({ item, t }) => {
     <View style={styles.assignmentCard}>
       <View style={styles.assignmentHeader}>
         <Text style={styles.assignmentTitle}>{getEvaluationType()}</Text>
-        <Ionicons name="chevron-down-outline" size={20} color="#666" />
+        {/* <Ionicons name="chevron-down-outline" size={20} color="#666" /> */}
       </View>
       
       <Text style={styles.assignmentSubject}>{item.titre}</Text>
@@ -133,6 +134,7 @@ export default function HomeScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const flatListRef = useRef(null);
+  const { unreadCount } = useNotifications();
   
   // Charger les données
   const loadData = async () => {
@@ -250,9 +252,22 @@ export default function HomeScreen() {
           <Text style={styles.userName}>{user?.prenom || 'Utilisateur'}</Text>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconButton} onPress={() => router.push('notification')}>
+          {/* Cloche de notification avec badge */}
+          <TouchableOpacity 
+            style={styles.iconButton} 
+            onPress={() => router.push('notification')}
+          >
             <Ionicons name="notifications" size={24} color="#666" />
+            {/* ⬇️ AJOUTER LE BADGE */}
+            {unreadCount > 0 && (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationBadgeText}>
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
+          
           <TouchableOpacity style={styles.profileButton} onPress={() => router.push('profile')}>
             <View style={styles.profileAvatar}>
               <Text style={styles.profileInitial}>
@@ -668,5 +683,24 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 10,
     textAlign: 'center',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: '#DC2626',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  notificationBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
 });

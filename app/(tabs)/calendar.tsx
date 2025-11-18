@@ -16,6 +16,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext'; // Import du contexte de langue
 import api from '../../services/api';
 import * as MediaLibrary from 'expo-media-library';
 import { captureRef } from 'react-native-view-shot';
@@ -25,6 +26,7 @@ const { width } = Dimensions.get('window');
 
 const EmploiDuTempsScreen = () => {
   const { user } = useAuth();
+  const { t } = useLanguage(); // Hook pour les traductions
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date().getDate());
   const [activeTab, setActiveTab] = useState('cours');
@@ -34,11 +36,31 @@ const EmploiDuTempsScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const calendarRef = useRef(null);
   
+  // Tableaux de mois et jours traduits
   const months = [
-    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+    t('schedule.months.january'),
+    t('schedule.months.february'),
+    t('schedule.months.march'),
+    t('schedule.months.april'),
+    t('schedule.months.may'),
+    t('schedule.months.june'),
+    t('schedule.months.july'),
+    t('schedule.months.august'),
+    t('schedule.months.september'),
+    t('schedule.months.october'),
+    t('schedule.months.november'),
+    t('schedule.months.december')
   ];
-  const daysOfWeek = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+  
+  const daysOfWeek = [
+    t('schedule.daysOfWeek.monday'),
+    t('schedule.daysOfWeek.tuesday'),
+    t('schedule.daysOfWeek.wednesday'),
+    t('schedule.daysOfWeek.thursday'),
+    t('schedule.daysOfWeek.friday'),
+    t('schedule.daysOfWeek.saturday'),
+    t('schedule.daysOfWeek.sunday')
+  ];
   
   // Charger les événements
   const loadEvents = async () => {
@@ -50,7 +72,7 @@ const EmploiDuTempsScreen = () => {
       setEvents(response.data.data.evenements);
     } catch (error) {
       console.error('Erreur lors du chargement des événements:', error);
-      Alert.alert('Erreur', 'Impossible de charger l\'emploi du temps');
+      Alert.alert(t('error.title'), t('schedule.error'));
     } finally {
       setIsLoading(false);
     }
@@ -79,8 +101,8 @@ const EmploiDuTempsScreen = () => {
             </style>
           </head>
           <body>
-            <h1>Aucun événement trouvé</h1>
-            <p>Il n'y a aucun événement à afficher pour cette période.</p>
+            <h1>${t('schedule.noEventsForPDF')}</h1>
+            <p>${t('schedule.noEventsForPDFSubtitle')}</p>
           </body>
         </html>
       `;
@@ -112,29 +134,29 @@ const EmploiDuTempsScreen = () => {
           </style>
         </head>
         <body>
-          <h1>Emploi du temps - ${user.etablissementActif}</h1>
+          <h1>${t('schedule.title')} - ${user.etablissementActif}</h1>
           
           <div class="header-info">
             <div>
-              <strong>Période:</strong> ${periodeInfo.nom}
+              <strong>${t('results.period')}:</strong> ${periodeInfo.nom}
             </div>
             <div>
-              <strong>Année scolaire:</strong> ${anneeScolaireInfo.nom}
+              <strong>${t('results.schoolYear')}:</strong> ${anneeScolaireInfo.nom}
             </div>
           </div>
           
-          <p>Généré le ${new Date().toLocaleDateString('fr-FR')}</p>
+          <p>${t('schedule.generatedOn')} ${new Date().toLocaleDateString('fr-FR')}</p>
           
-          <h2>Événements</h2>
+          <h2>${t('schedule.events')}</h2>
           <table>
             <thead>
               <tr>
-                <th>Date</th>
-                <th>Heure</th>
-                <th>Matière</th>
-                <th>Type</th>
-                <th>Enseignant</th>
-                <th>Salle</th>
+                <th>${t('schedule.date')}</th>
+                <th>${t('schedule.time')}</th>
+                <th>${t('schedule.subject')}</th>
+                <th>${t('schedule.type')}</th>
+                <th>${t('schedule.teacher')}</th>
+                <th>${t('schedule.room')}</th>
               </tr>
             </thead>
             <tbody>
@@ -153,15 +175,15 @@ const EmploiDuTempsScreen = () => {
       });
 
       let eventTypeClass = 'type-cours';
-      let eventTypeName = 'Cours';
+      let eventTypeName = t('schedule.classes');
       
       if (event.type === 'evaluation') {
         if (event.sousType === 'examen') {
           eventTypeClass = 'type-examen';
-          eventTypeName = 'Examen';
+          eventTypeName = t('schedule.exams');
         } else if (event.sousType === 'devoir_surveille') {
           eventTypeClass = 'type-devoir';
-          eventTypeName = 'Devoir';
+          eventTypeName = t('schedule.homework');
         }
       } else if (event.type === 'td') {
         eventTypeClass = 'type-td';
@@ -171,7 +193,7 @@ const EmploiDuTempsScreen = () => {
         eventTypeName = 'TP';
       } else if (event.type === 'projet') {
         eventTypeClass = 'type-projet';
-        eventTypeName = 'Projet';
+        eventTypeName = t('schedule.project');
       }
 
       htmlContent += `
@@ -202,7 +224,7 @@ const EmploiDuTempsScreen = () => {
       setIsDownloading(true);
       
       if (events.length === 0) {
-        Alert.alert('Information', 'Aucun événement trouvé pour générer l\'emploi du temps.');
+        Alert.alert(t('common.information'), t('schedule.noEventsForPDF'));
         return;
       }
       
@@ -216,7 +238,7 @@ const EmploiDuTempsScreen = () => {
       
     } catch (error) {
       console.error('Erreur lors de la génération du PDF:', error);
-      Alert.alert('Erreur', 'Impossible de générer l\'emploi du temps.');
+      Alert.alert(t('error.title'), t('schedule.pdfGenerationError'));
     } finally {
       setIsDownloading(false);
     }
@@ -226,21 +248,21 @@ const EmploiDuTempsScreen = () => {
   const handleShare = async () => {
     try {
       Alert.alert(
-        'Emploi du temps',
-        'Que souhaitez-vous faire ?',
+        t('schedule.title'),
+        t('schedule.shareOptionsTitle'),
         [
           {
-            text: 'Annuler',
+            text: t('common.cancel'),
             style: 'cancel'
           },
           {
-            text: 'Imprimer en PDF',
+            text: t('schedule.printPDF'),
             onPress: async () => {
               await generateAndPrintPDF();
             }
           },
           {
-            text: 'Sauvegarder en image',
+            text: t('schedule.saveAsImage'),
             onPress: async () => {
               await saveToGallery();
             }
@@ -249,7 +271,7 @@ const EmploiDuTempsScreen = () => {
       );
     } catch (error) {
       console.error('Erreur lors du traitement:', error);
-      Alert.alert('Erreur', 'Impossible de traiter l\'emploi du temps');
+      Alert.alert(t('error.title'), t('schedule.processingError'));
     }
   };
 
@@ -259,7 +281,7 @@ const EmploiDuTempsScreen = () => {
       // Demander les permissions
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission requise', 'L\'application a besoin de l\'autorisation pour accéder à votre galerie.');
+        Alert.alert(t('common.permissionRequired'), t('schedule.galleryPermission'));
         return;
       }
 
@@ -273,19 +295,19 @@ const EmploiDuTempsScreen = () => {
       const asset = await MediaLibrary.createAssetAsync(uri);
       await MediaLibrary.createAlbumAsync('ENT App', asset, false);
       
-      Alert.alert('Succès', 'L\'emploi du temps a été sauvegardé dans votre galerie !');
+      Alert.alert(t('common.success'), t('schedule.savedToGallery'));
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
-      Alert.alert('Erreur', 'Impossible de sauvegarder l\'emploi du temps');
+      Alert.alert(t('error.title'), t('schedule.saveError'));
     }
   };
 
   // Fonction pour la recherche (simple)
   const handleSearch = () => {
     Alert.alert(
-      'Recherche',
-      'Fonctionnalité de recherche à venir.\nVous pourrez bientôt rechercher des cours, enseignants ou salles.',
-      [{ text: 'OK' }]
+      t('schedule.search'),
+      t('schedule.searchComingSoon'),
+      [{ text: t('common.ok') }]
     );
   };
 
@@ -402,9 +424,9 @@ const EmploiDuTempsScreen = () => {
     tomorrow.setDate(tomorrow.getDate() + 1);
     
     if (date.toDateString() === today.toDateString()) {
-      return "Aujourd'hui";
+      return t('schedule.today');
     } else if (date.toDateString() === tomorrow.toDateString()) {
-      return "Demain";
+      return t('schedule.tomorrow');
     } else {
       return date.toLocaleDateString('fr-FR', {
         weekday: 'long',
@@ -437,7 +459,7 @@ const EmploiDuTempsScreen = () => {
         <StatusBar barStyle="dark-content" backgroundColor="#fff" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Chargement de l'emploi du temps...</Text>
+          <Text style={styles.loadingText}>{t('schedule.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -449,7 +471,7 @@ const EmploiDuTempsScreen = () => {
       
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Emploi du temps</Text>
+        <Text style={styles.headerTitle}>{t('schedule.title')}</Text>
         <View style={styles.headerIcons}>
           <TouchableOpacity 
             style={styles.iconButton} 
@@ -528,19 +550,19 @@ const EmploiDuTempsScreen = () => {
         
         {/* Légende des couleurs */}
         <View style={styles.legendContainer}>
-          <Text style={styles.legendTitle}>Légende:</Text>
+          <Text style={styles.legendTitle}>{t('schedule.legend')}</Text>
           <View style={styles.legendItems}>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: '#3498db' }]} />
-              <Text style={styles.legendText}>Cours</Text>
+              <Text style={styles.legendText}>{t('schedule.classes')}</Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: '#4CAF50' }]} />
-              <Text style={styles.legendText}>Devoirs</Text>
+              <Text style={styles.legendText}>{t('schedule.homework')}</Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: '#F44336' }]} />
-              <Text style={styles.legendText}>Examens</Text>
+              <Text style={styles.legendText}>{t('schedule.exams')}</Text>
             </View>
           </View>
         </View>
@@ -562,7 +584,9 @@ const EmploiDuTempsScreen = () => {
                   activeTab === tab && styles.activeTabText,
                 ]}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {tab === 'cours' ? t('schedule.classes') : 
+                 tab === 'devoirs' ? t('schedule.homework') : 
+                 t('schedule.exams')}
               </Text>
             </TouchableOpacity>
           ))}
@@ -588,7 +612,7 @@ const EmploiDuTempsScreen = () => {
                 </View>
                 <View style={styles.eventDetails}>
                   <Text style={styles.eventTitle}>
-                    {event.titre || `${event.matiere.nom} - ${event.type === 'evaluation' ? event.sousType === 'examen' ? 'Examen' : 'Devoir' : 'Cours'}`}
+                    {event.titre || `${event.matiere.nom} - ${event.type === 'evaluation' ? event.sousType === 'examen' ? t('schedule.exams') : t('schedule.homework') : t('schedule.classes')}`}
                   </Text>
                   <Text style={styles.eventTeacher}>
                     {event.enseignant.nomComplet}
@@ -599,16 +623,22 @@ const EmploiDuTempsScreen = () => {
                     </Text>
                   )}
                 </View>
-                <TouchableOpacity style={styles.eventOptions}>
+                {/* <TouchableOpacity style={styles.eventOptions}>
                   <Ionicons name="ellipsis-horizontal" size={20} color="#666" />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
             ))
           ) : (
             <View style={styles.noEventsContainer}>
               <Ionicons name="calendar-outline" size={48} color="#ccc" />
               <Text style={styles.noEventsText}>
-                Aucun {activeTab} pour le {selectedDate} {months[currentDate.getMonth()].toLowerCase()}
+                {t('schedule.noEvents', { 
+                  type: activeTab === 'cours' ? t('schedule.classes') : 
+                        activeTab === 'devoirs' ? t('schedule.homework') : 
+                        t('schedule.exams'),
+                  day: selectedDate,
+                  month: months[currentDate.getMonth()].toLowerCase()
+                })}
               </Text>
             </View>
           )}

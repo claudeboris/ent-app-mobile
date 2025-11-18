@@ -17,19 +17,21 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext'; // Import du contexte de langue
 import api from '../../services/api';
 
 const { width } = Dimensions.get('window');
 
 const PaiementsScreen = () => {
   const { user, profileType } = useAuth();
+  const { t } = useLanguage(); // Hook pour les traductions
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState('');
   const [selectedTranche, setSelectedTranche] = useState(null);
   const [selectedMoyen, setSelectedMoyen] = useState(null);
   const [numeroTelephone, setNumeroTelephone] = useState('');
   const [montantAPayer, setMontantAPayer] = useState(0);
-  const [activeTab, setActiveTab] = useState('Montants payés');
+  const [activeTab, setActiveTab] = useState(t('payments.tabs.paid'));
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   
@@ -41,10 +43,10 @@ const PaiementsScreen = () => {
   
   // Moyens de paiement
   const moyensPaiement = [
-    { id: 'wave', nom: 'Wave', icon: '📱', couleur: '#00D4FF' },
-    { id: 'orange', nom: 'Orange Money', icon: '📱', couleur: '#FF7900' },
-    { id: 'mtn', nom: 'MTN Money', icon: '📱', couleur: '#FFCC00' },
-    { id: 'moov', nom: 'Moov Money', icon: '📱', couleur: '#0099CC' },
+    { id: 'wave', nom: t('payments.paymentMethods.wave'), icon: '📱', couleur: '#00D4FF' },
+    { id: 'orange', nom: t('payments.paymentMethods.orange'), icon: '📱', couleur: '#FF7900' },
+    { id: 'mtn', nom: t('payments.paymentMethods.mtn'), icon: '📱', couleur: '#FFCC00' },
+    { id: 'moov', nom: t('payments.paymentMethods.moov'), icon: '📱', couleur: '#0099CC' },
   ];
 
   // Charger les données de l'inscription
@@ -58,7 +60,7 @@ const PaiementsScreen = () => {
       }
     } catch (error) {
       console.error('Erreur lors du chargement de l\'inscription:', error);
-      Alert.alert('Erreur', 'Impossible de vérifier votre inscription');
+      Alert.alert(t('error.title'), t('payments.errors.inscription'));
     }
   };
 
@@ -71,14 +73,13 @@ const PaiementsScreen = () => {
       }
     } catch (error) {
       console.error('Erreur lors du chargement des informations de paiement:', error);
-      Alert.alert('Erreur', 'Impossible de charger les informations de paiement');
+      Alert.alert(t('error.title'), t('payments.errors.paymentInfo'));
     }
   };
 
   // Charger les années scolaires
   const loadAnneesScolaires = async () => {
     try {
-      console.log('data', user?.etablissementActif)
       const etablissementId = user?.etablissementActif;
       const response = await api.get(`/annee-scolaire/etablissement/${etablissementId}`);
       if (response.data.data && response.data.data.anneesScolaires) {
@@ -90,9 +91,8 @@ const PaiementsScreen = () => {
         }
       }
     } catch (error) {
-      console.log('data', user)
       console.error('Erreur lors du chargement des années scolaires:', error);
-      Alert.alert('Erreur', 'Impossible de charger les années scolaires');
+      Alert.alert(t('error.title'), t('payments.errors.schoolYears'));
     }
   };
 
@@ -163,18 +163,18 @@ const PaiementsScreen = () => {
   // Confirmer le paiement
   const handleConfirmerPaiement = async () => {
     if (!numeroTelephone.trim()) {
-      Alert.alert('Erreur', 'Veuillez saisir un numéro de téléphone');
+      Alert.alert(t('error.title'), t('payments.errors.phoneRequired'));
       return;
     }
     
     try {
       // Simuler le paiement
       Alert.alert(
-        'Paiement initié',
-        `Un code de confirmation va être envoyé au ${numeroTelephone}`,
+        t('payments.paymentInitiated'),
+        t('payments.confirmationCodeSent', { phone: numeroTelephone }),
         [
           {
-            text: 'OK',
+            text: t('common.ok'),
             onPress: async () => {
               closeModal();
               // Mettre à jour les données après paiement
@@ -186,7 +186,7 @@ const PaiementsScreen = () => {
       );
     } catch (error) {
       console.error('Erreur lors du paiement:', error);
-      Alert.alert('Erreur', 'Le paiement a échoué');
+      Alert.alert(t('error.title'), t('payments.errors.paymentFailed'));
     }
   };
 
@@ -209,7 +209,7 @@ const PaiementsScreen = () => {
                 <Ionicons name="close" size={24} color="#333" />
               </TouchableOpacity>
             </View>
-            <Text style={styles.modalTitle}>Sélectionner une tranche</Text>
+            <Text style={styles.modalTitle}>{t('payments.selectInstallment')}</Text>
             
             <View style={styles.tranchesContainer}>
               {paiementInfo && paiementInfo.tranches.map((tranche) => (
@@ -240,20 +240,13 @@ const PaiementsScreen = () => {
                       tranche.statutPaiement === 'complet' ? styles.statutPaye : 
                       tranche.statutPaiement === 'partiel' ? styles.statutPartiel : styles.statutNonPaye
                     ]}>
-                      {tranche.statutPaiement === 'complet' ? 'Payée' : 
-                       tranche.statutPaiement === 'partiel' ? 'Partielle' : 'Non payée'}
+                      {tranche.statutPaiement === 'complet' ? t('payments.status.paid') : 
+                       tranche.statutPaiement === 'partiel' ? t('payments.status.partial') : t('payments.status.unpaid')}
                     </Text>
                   </View>
                 </TouchableOpacity>
               ))}
             </View>
-            
-            {/* <TouchableOpacity 
-              style={styles.payerTotalButton}
-              onPress={() => openModal('montant', { montant: montantRestant, nom: 'Totalité' })}
-            >
-              <Text style={styles.payerTotalButtonText}>Payer la totalité ({montantRestant.toLocaleString()} F)</Text>
-            </TouchableOpacity> */}
           </View>
         );
         
@@ -265,12 +258,12 @@ const PaiementsScreen = () => {
                 <Ionicons name="close" size={24} color="#333" />
               </TouchableOpacity>
             </View>
-            <Text style={styles.modalTitle}>Confirmer le paiement</Text>
+            <Text style={styles.modalTitle}>{t('payments.confirmPayment')}</Text>
             
             <View style={styles.montantContainer}>
               <Text style={styles.montantPrincipal}>{montantAPayer.toLocaleString()} F</Text>
               <Text style={styles.montantEcole}>
-                {selectedTranche?.nom || 'Totalité des frais'}
+                {selectedTranche?.nom || t('payments.totalFees')}
               </Text>
             </View>
             
@@ -281,7 +274,7 @@ const PaiementsScreen = () => {
                 setTimeout(() => openModal('moyens'), 300);
               }}
             >
-              <Text style={styles.payerButtonText}>Continuer</Text>
+              <Text style={styles.payerButtonText}>{t('common.continue')}</Text>
             </TouchableOpacity>
           </View>
         );
@@ -293,7 +286,7 @@ const PaiementsScreen = () => {
               <TouchableOpacity onPress={closeModal}>
                 <Ionicons name="chevron-back" size={24} color="#333" />
               </TouchableOpacity>
-              <Text style={styles.modalHeaderTitle}>Moyen de paiement</Text>
+              <Text style={styles.modalHeaderTitle}>{t('payments.paymentMethod')}</Text>
             </View>
             
             <View style={styles.moyensContainer}>
@@ -323,20 +316,20 @@ const PaiementsScreen = () => {
               <TouchableOpacity onPress={closeModal}>
                 <Ionicons name="chevron-back" size={24} color="#333" />
               </TouchableOpacity>
-              <Text style={styles.modalHeaderTitle}>Numéro de téléphone</Text>
+              <Text style={styles.modalHeaderTitle}>{t('payments.phoneNumber')}</Text>
             </View>
             
             <View style={styles.numeroContainer}>
-              <Text style={styles.numeroLabel}>Numéro de téléphone</Text>
+              <Text style={styles.numeroLabel}>{t('payments.phoneNumber')}</Text>
               <TextInput
                 style={styles.numeroInput}
                 value={numeroTelephone}
                 onChangeText={setNumeroTelephone}
-                placeholder="+225 XX XX XX XX XX"
+                placeholder={t('payments.phonePlaceholder')}
                 keyboardType="phone-pad"
               />
               
-              <Text style={styles.montantInfo}>Montant à payer: {montantAPayer.toLocaleString()} F CFA</Text>
+              <Text style={styles.montantInfo}>{t('payments.amountToPay')}: {montantAPayer.toLocaleString()} F CFA</Text>
             </View>
             
             <TouchableOpacity 
@@ -344,7 +337,7 @@ const PaiementsScreen = () => {
               onPress={handleConfirmerPaiement}
               disabled={!numeroTelephone.trim()}
             >
-              <Text style={styles.confirmerButtonText}>Confirmer le paiement</Text>
+              <Text style={styles.confirmerButtonText}>{t('payments.confirmPayment')}</Text>
             </TouchableOpacity>
           </View>
         );
@@ -360,7 +353,7 @@ const PaiementsScreen = () => {
         <StatusBar barStyle="dark-content" backgroundColor="#fff" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Chargement des données...</Text>
+          <Text style={styles.loadingText}>{t('payments.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -372,11 +365,8 @@ const PaiementsScreen = () => {
       
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Paiements</Text>
+        <Text style={styles.headerTitle}>{t('payments.title')}</Text>
         <View style={styles.headerIcons}>
-         {/*  <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="search-outline" size={24} color="#333" />
-          </TouchableOpacity> */}
           <TouchableOpacity style={styles.iconButton} onPress={() => router.push('notification')}>
             <Ionicons name="notifications-outline" size={24} color="#333" />
           </TouchableOpacity>
@@ -391,69 +381,44 @@ const PaiementsScreen = () => {
       >
         {/* Sélecteur d'année scolaire */}
         <View style={styles.anneeSelectorContainer}>
-          <Text style={styles.anneeSelectorLabel}>Année scolaire</Text>
-          <TouchableOpacity 
-            style={styles.anneeSelectorButton}
-            onPress={() => openModal('annees')}
-          >
-            <Text style={styles.anneeSelectorValue}>
-              {selectedAnnee ? selectedAnnee.nom : 'Sélectionner une année'}
+          <Text style={styles.anneeSelectorLabel}>{t('payments.schoolYear')}</Text>
+          <View style={styles.disabledInput}>
+            <Text style={styles.disabledInputText}>
+              {selectedAnnee ? selectedAnnee.nom : t('payments.selectYear')}
             </Text>
-            <Ionicons name="chevron-down" size={16} color="#666" />
-          </TouchableOpacity>
+          </View>
         </View>
-        
-        {/* Montants */}
-        {/* <View style={styles.montantsContainer}>
-          <View style={styles.montantCard}>
-            <View style={styles.montantHeader}>
-              <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
-              <Text style={styles.montantLabel}>MONTANT PAYÉ</Text>
-            </View>
-            <Text style={styles.montantValue}>{montantPaye.toLocaleString()} F</Text>
-          </View>
-          
-          <View style={styles.montantCard}>
-            <View style={styles.montantHeader}>
-              <Ionicons name="calendar-outline" size={20} color="#4ECDC4" />
-              <Text style={styles.montantLabel}>MONTANT RESTANT</Text>
-            </View>
-            <Text style={[styles.montantValue, styles.montantRestantValue]}>
-              {montantRestant.toLocaleString()} F
-            </Text>
-          </View>
-        </View> */}
         
         {/* Onglets */}
         <View style={styles.tabsContainer}>
           <TouchableOpacity
-            style={[styles.tab, activeTab === 'Montants payés' && styles.activeTab]}
-            onPress={() => setActiveTab('Montants payés')}
+            style={[styles.tab, activeTab === t('payments.tabs.paid') && styles.activeTab]}
+            onPress={() => setActiveTab(t('payments.tabs.paid'))}
           >
             <Text style={[
               styles.tabText, 
-              activeTab === 'Montants payés' && styles.activeTabText
+              activeTab === t('payments.tabs.paid') && styles.activeTabText
             ]}>
-              Montants payés
+              {t('payments.tabs.paid')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tab, activeTab === 'Échéances restantes' && styles.activeTab]}
-            onPress={() => setActiveTab('Échéances restantes')}
+            style={[styles.tab, activeTab === t('payments.tabs.remaining') && styles.activeTab]}
+            onPress={() => setActiveTab(t('payments.tabs.remaining'))}
           >
             <Text style={[
               styles.tabText,
-              activeTab === 'Échéances restantes' && styles.activeTabText
+              activeTab === t('payments.tabs.remaining') && styles.activeTabText
             ]}>
-              Échéances restantes
+              {t('payments.tabs.remaining')}
             </Text>
           </TouchableOpacity>
         </View>
         
         {/* Contenu des onglets */}
-        {activeTab === 'Montants payés' && paiementInfo && paiementInfo.paiements && paiementInfo.paiements.length > 0 ? (
+        {activeTab === t('payments.tabs.paid') && paiementInfo && paiementInfo.paiements && paiementInfo.paiements.length > 0 ? (
           <View style={styles.historyContainer}>
-            <Text style={styles.historyTitle}>Historique des paiements</Text>
+            <Text style={styles.historyTitle}>{t('payments.paymentHistory')}</Text>
             {paiementInfo.paiements.map((paiement) => (
               <TouchableOpacity
                 key={paiement._id}
@@ -465,13 +430,13 @@ const PaiementsScreen = () => {
                 </View>
                 <View style={styles.historyDetails}>
                   <Text style={styles.historyType}>
-                    {paiement.estPaiementGlobal ? 'Paiement global' : paiement.trancheNom}
+                    {paiement.estPaiementGlobal ? t('payments.globalPayment') : paiement.trancheNom}
                   </Text>
                   <Text style={styles.historyDateTime}>
                     {new Date(paiement.datePaiement).toLocaleDateString('fr-FR')} à {new Date(paiement.datePaiement).toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}
                   </Text>
                   <Text style={styles.historyReference}>
-                    Réf: {paiement.referencePaiement}
+                    {t('payments.reference')}: {paiement.referencePaiement}
                   </Text>
                 </View>
                 <Text style={styles.historyAmount}>
@@ -480,62 +445,79 @@ const PaiementsScreen = () => {
               </TouchableOpacity>
             ))}
           </View>
-        ) : activeTab === 'Montants payés' ? (
+        ) : activeTab === t('payments.tabs.paid') ? (
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIcon}>
               <Ionicons name="wallet-outline" size={60} color="#ccc" />
             </View>
-            <Text style={styles.emptyText}>Aucune transaction pour le moment.</Text>
-            <Text style={styles.emptySubtext}>Faites un paiement.</Text>
+            <Text style={styles.emptyText}>{t('payments.noTransactions')}</Text>
+            <Text style={styles.emptySubtext}>{t('payments.makePayment')}</Text>
           </View>
         ) : (
           <View style={styles.echeancesContainer}>
-            <Text style={styles.echeancesTitle}>Échéances à payer</Text>
-            {paiementInfo && paiementInfo.tranches && paiementInfo.tranches.length > 0 ? (
-              paiementInfo.tranches
-                .filter(tranche => tranche.statutPaiement !== 'complet')
-                .map((tranche) => (
-                  <View key={tranche._id} style={styles.echeanceItem}>
-                    <View style={styles.echeanceInfo}>
-                      <Text style={styles.echeanceNom}>{tranche.nom}</Text>
-                      <Text style={styles.echeanceDate}>
-                        Échéance: {new Date(tranche.dateFin).toLocaleDateString('fr-FR')}
-                      </Text>
+            {(() => {
+              // On filtre uniquement les tranches non complètes
+              const tranchesNonCompletes =
+                paiementInfo?.tranches?.filter((t) => t.statutPaiement !== 'complet') || [];
+
+              // S'il y a des tranches à payer
+              if (tranchesNonCompletes.length > 0) {
+                return (
+                  <>
+                    <Text style={styles.echeancesTitle}>{t('payments.dueDates')}</Text>
+
+                    {tranchesNonCompletes.map((tranche) => (
+                      <View key={tranche._id} style={styles.echeanceItem}>
+                        <View style={styles.echeanceInfo}>
+                          <Text style={styles.echeanceNom}>{tranche.nom}</Text>
+                          <Text style={styles.echeanceDate}>
+                            {t('payments.dueDate')}: {new Date(tranche.dateFin).toLocaleDateString('fr-FR')}
+                          </Text>
+                        </View>
+
+                        <View style={styles.echeanceMontant}>
+                          <Text style={styles.echeanceMontantValue}>
+                            {tranche.montant.toLocaleString()} F
+                          </Text>
+                          <TouchableOpacity
+                            style={styles.payerEcheanceButton}
+                            onPress={() => openModal('tranches', tranche)}
+                          >
+                            <Text style={styles.payerEcheanceText}>{t('payments.pay')}</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    ))}
+                  </>
+                );
+              }
+
+              // Sinon, toutes les tranches sont complètes ou aucune tranche
+              return (
+                <View style={styles.noEcheancesContainer}>
+                  <View style={styles.noEcheancesIconContainer}>
+                    <Ionicons name="checkmark-circle-outline" size={60} color="#4CAF50" />
+                  </View>
+
+                  <Text style={styles.noEcheancesTitle}>{t('payments.congratulations')}</Text>
+                  <Text style={styles.noEcheancesText}>
+                    {t('payments.noDueDates')}
+                  </Text>
+
+                  <View style={styles.noEcheancesCard}>
+                    <View style={styles.noEcheancesCardItem}>
+                      <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
+                      <Text style={styles.noEcheancesCardText}>{t('payments.allPaymentsUpToDate')}</Text>
                     </View>
-                    <View style={styles.echeanceMontant}>
-                      <Text style={styles.echeanceMontantValue}>
-                        {tranche.montant.toLocaleString()} F
-                      </Text>
-                      <TouchableOpacity 
-                        style={styles.payerEcheanceButton}
-                        onPress={() => openModal('tranches', tranche)}
-                      >
-                        <Text style={styles.payerEcheanceText}>Payer</Text>
-                      </TouchableOpacity>
+
+                    <View style={styles.noEcheancesCardItem}>
+                      <Ionicons name="calendar-outline" size={20} color="#007AFF" />
+                      <Text style={styles.noEcheancesCardText}>{t('payments.nextDueDate')}: {t('payments.notDefined')}</Text>
                     </View>
                   </View>
-                ))
-            ) : (
-              <View style={styles.noEcheancesContainer}>
-                <View style={styles.noEcheancesIconContainer}>
-                  <Ionicons name="checkmark-circle-outline" size={60} color="#4CAF50" />
                 </View>
-                <Text style={styles.noEcheancesTitle}>Félicitations!</Text>
-                <Text style={styles.noEcheancesText}>
-                  Vous n'avez aucune échéance de paiement en attente pour cette année scolaire.
-                </Text>
-                <View style={styles.noEcheancesCard}>
-                  <View style={styles.noEcheancesCardItem}>
-                    <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
-                    <Text style={styles.noEcheancesCardText}>Tous les paiements sont à jour</Text>
-                  </View>
-                  <View style={styles.noEcheancesCardItem}>
-                    <Ionicons name="calendar-outline" size={20} color="#007AFF" />
-                    <Text style={styles.noEcheancesCardText}>Prochaine échéance: Non définie</Text>
-                  </View>
-                </View>
-              </View>
-            )}
+              );
+            })()}
           </View>
         )}
         
@@ -546,7 +528,7 @@ const PaiementsScreen = () => {
             onPress={() => openModal('tranches')}
           >
             <Ionicons name="add" size={24} color="#fff" />
-            <Text style={styles.nouveauPaiementText}>Nouveau paiement</Text>
+            <Text style={styles.nouveauPaiementText}>{t('payments.newPayment')}</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -617,20 +599,20 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 5,
   },
-  anneeSelectorButton: {
+  disabledInput: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: '#f0f0f0',
     borderWidth: 1,
     borderColor: '#e0e0e0',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
-  anneeSelectorValue: {
+  disabledInputText: {
     fontSize: 14,
-    color: '#333',
+    color: '#666',
   },
   montantsContainer: {
     flexDirection: 'row',

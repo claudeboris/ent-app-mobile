@@ -77,7 +77,7 @@ export default function EventDetailScreen() {
         <StatusBar barStyle="dark-content" backgroundColor="white" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Chargement des détails...</Text>
+          <Text style={styles.loadingText}>{t('eventDetails.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -89,7 +89,7 @@ export default function EventDetailScreen() {
         <StatusBar barStyle="dark-content" backgroundColor="white" />
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle-outline" size={60} color="#F44336" />
-          <Text style={styles.errorText}>Événement non trouvé</Text>
+          <Text style={styles.errorText}>{t('eventDetails.notFound')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -104,7 +104,7 @@ export default function EventDetailScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Détails de l'événement</Text>
+        <Text style={styles.headerTitle}>{t('eventDetails.title')}</Text>
         <TouchableOpacity onPress={onRefresh}>
           <Ionicons name="refresh-outline" size={24} color="#007AFF" />
         </TouchableOpacity>
@@ -156,28 +156,28 @@ export default function EventDetailScreen() {
             
             <View style={styles.infoItem}>
               <Ionicons name="information-circle-outline" size={20} color="#007AFF" />
-              <Text style={styles.infoText}>Type: {event.type}</Text>
+              <Text style={styles.infoText}>{t('eventDetails.type')}: {event.type}</Text>
             </View>
             
             <View style={styles.infoItem}>
               <Ionicons name="checkmark-circle-outline" size={20} color="#007AFF" />
-              <Text style={styles.infoText}>Statut: {event.statut}</Text>
+              <Text style={styles.infoText}>{t('eventDetails.status')}: {event.statut}</Text>
             </View>
           </View>
           
           {/* Additional Information */}
           {event.estRecurrent && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Récurrence</Text>
+              <Text style={styles.sectionTitle}>{t('eventDetails.recurrence')}</Text>
               <Text style={styles.sectionContent}>
-                Tous les {event.recurrence.intervalle} jour(s)
+                {t('eventDetails.everyXDays', { days: event.recurrence.intervalle })}
               </Text>
             </View>
           )}
           
           {event.ressources && event.ressources.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Ressources</Text>
+              <Text style={styles.sectionTitle}>{t('eventDetails.resources')}</Text>
               {event.ressources.map((ressource, index) => (
                 <View key={index} style={styles.resourceItem}>
                   <Ionicons name="document-outline" size={16} color="#666" />
@@ -189,12 +189,12 @@ export default function EventDetailScreen() {
           
           {event.rappels && event.rappels.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Rappels</Text>
+              <Text style={styles.sectionTitle}>{t('eventDetails.reminders')}</Text>
               {event.rappels.map((rappel, index) => (
                 <View key={index} style={styles.reminderItem}>
                   <Ionicons name="notifications-outline" size={16} color="#666" />
                   <Text style={styles.reminderText}>
-                    {rappel.type === 'email' ? 'Email' : 'Notification'} - {rappel.delai} minutes avant
+                    {rappel.type === 'email' ? t('eventDetails.email') : t('eventDetails.notification')} - {t('eventDetails.minutesBefore', { minutes: rappel.delai })}
                   </Text>
                 </View>
               ))}

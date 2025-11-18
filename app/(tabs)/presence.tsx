@@ -115,18 +115,16 @@ export default function PresenceScreen() {
         <View style={styles.selectorsContainer}>
           <View style={styles.selector}>
             <Text style={styles.selectorLabel}>{t('presence.schoolYear')}</Text>
-            <TouchableOpacity style={styles.selectorButton}>
-              <Text style={styles.selectorValue}>{selectedYear}</Text>
-              <Ionicons name="chevron-down" size={16} color="#666" />
-            </TouchableOpacity>
+            <View style={styles.disabledInput}>
+              <Text style={styles.disabledInputText}>{selectedYear}</Text>
+            </View>
           </View>
           
           <View style={styles.selector}>
             <Text style={styles.selectorLabel}>{t('presence.period')}</Text>
-            <TouchableOpacity style={styles.selectorButton}>
-              <Text style={styles.selectorValue}>{selectedPeriod}</Text>
-              <Ionicons name="chevron-down" size={16} color="#666" />
-            </TouchableOpacity>
+            <View style={styles.disabledInput}>
+              <Text style={styles.disabledInputText}>{selectedPeriod}</Text>
+            </View>
           </View>
         </View>
         
@@ -151,11 +149,11 @@ export default function PresenceScreen() {
             </View>
             
             {/* Taux de présence */}
-            <View style={styles.tauxPresenceContainer}>
+           {/*  <View style={styles.tauxPresenceContainer}>
               <Text style={styles.tauxPresenceLabel}>{t('presence.attendanceRate')}</Text>
               <Text style={styles.tauxPresenceValue}>{presenceData.data.stats.tauxPresence}%</Text>
               
-              {/* Barre de progression */}
+              
               <View style={styles.progressBarContainer}>
                 <View 
                   style={[
@@ -164,7 +162,7 @@ export default function PresenceScreen() {
                   ]} 
                 />
               </View>
-            </View>
+            </View> */}
             
             {/* Absences List */}
             <View style={styles.absencesSection}>
@@ -181,9 +179,9 @@ export default function PresenceScreen() {
                             ({formatTime(absence.heureDebut)}-{formatTime(absence.heureFin)})
                           </Text>
                         </Text>
-                        <TouchableOpacity style={styles.moreButton}>
+                       {/*  <TouchableOpacity style={styles.moreButton}>
                           <Ionicons name="ellipsis-horizontal" size={20} color="#666" />
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
                       </View>
                       
                       {/* Fixed: Added safe navigation with optional chaining */}
@@ -277,20 +275,20 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 5,
   },
-  selectorButton: {
+  disabledInput: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: '#f0f0f0',
     borderWidth: 1,
     borderColor: '#e0e0e0',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
-  selectorValue: {
+  disabledInputText: {
     fontSize: 14,
-    color: '#333',
+    color: '#666',
   },
   statsContainer: {
     flexDirection: 'row',

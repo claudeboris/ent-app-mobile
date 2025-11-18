@@ -1,50 +1,865 @@
-app/
-├── _layout.tsx               # Layout racine
-├── language/
-│   └── page.tsx             # Écran de sélection de langue
-├── (auth)/
-│   ├── _layout.tsx           # Layout pour les écrans d'authentification
-│   ├── welcome/
-│   │   └── page.tsx          # Écran de bienvenue
-│   ├── profile/
-│   │   └── page.tsx          # Sélection de profil
-│   ├── login/
-│   │   └── page.tsx          # Connexion
-│   ├── forgot-password/
-│   │   └── page.tsx          # Mot de passe oublié
-│   └── otp/
-│       └── page.tsx          # Vérification OTP
-├── (tabs)/
-│   ├── _layout.tsx           # Layout pour les onglets (après authentification)
-│   ├── home/
-│   │   └── page.tsx
-│   └── ...                   # Autres onglets
-└── +not-found.tsx            # Page 404
-
-components/
-├── Button.tsx                # Bouton réutilisable
-├── Input.tsx                 # Champ de saisie
-├── Header.tsx                # En-tête commun
-└── Footer.tsx                # Pied de page
-
-constants/
-├── Colors.ts                 # Palette de couleurs
-├── translations.ts           # Traductions multi-langues
-└── strings.ts                # Textes de l'application (obsolète)
-
-contexts/
-└── LanguageContext.tsx       # Contexte pour la langue
-
-hooks/
-├── useAuth.ts                # Hook d'authentification
-└── useLanguage.ts            # Hook pour la langue
-
-assets/
-├── images/
-│   ├── welcome.png
-│   ├── phone-hand.png
-│   ├── logo.png
-│   ├── fr-flag.png           # Drapeau français
-│   └── en-flag.png           # Drapeau anglais
-└── fonts/
-    └── Roboto-Regular.ttf
+{
+    "status": "succès",
+    "data": {
+        "eleve": {
+            "id": "68ecfd854a34fa49176e7d5e",
+            "nom": "Kouadio",
+            "prenom": "Marie-Claire",
+            "email": "marie.kouadio@example.com"
+        },
+        "notesParAnnee": [
+            {
+                "anneeScolaire": {
+                    "id": "68f5513e20f548112dabce7b",
+                    "nom": "2025-2026",
+                    "dateDebut": "2025-10-15T00:00:00.000Z",
+                    "dateFin": "2026-07-15T00:00:00.000Z"
+                },
+                "periodes": [
+                    {
+                        "periode": {
+                            "id": "690bf04c0a8703d1c16947a1",
+                            "nom": "1er semestre",
+                            "dateDebut": "2025-10-15T00:00:00.000Z",
+                            "dateFin": "2026-02-14T00:00:00.000Z"
+                        },
+                        "notes": [
+                            {
+                                "id": "690c88d3e04ba9d5388e8a4b",
+                                "valeur": 10,
+                                "coefficient": 1,
+                                "typeEvaluation": "examen",
+                                "sousTypeEvaluation": "examen_final",
+                                "dateEvaluation": "2025-11-06T00:00:00.000Z",
+                                "dateSaisie": "2025-11-06T11:38:59.135Z",
+                                "appreciation": "",
+                                "statut": "publie",
+                                "dateValidation": "2025-11-06T11:38:59.134Z",
+                                "matiere": {
+                                    "id": "68ec2f35d4a21893afcb82c4",
+                                    "nom": "Mathématiques Générales",
+                                    "code": "MATH101",
+                                    "couleur": "#d24d14",
+                                    "coefficient": 3
+                                },
+                                "classe": {
+                                    "id": "68f55e582bbc174f10b323d2",
+                                    "nom": "Licence 1 - A",
+                                    "niveau": "Licence 1"
+                                },
+                                "enseignant": null,
+                                "validePar": {
+                                    "id": "68c1b3f940286a6ec09d4801",
+                                    "nom": "Coulibaly",
+                                    "prenom": "Agnès"
+                                }
+                            }
+                        ],
+                        "matieres": {
+                            "68ec2f35d4a21893afcb82c4": {
+                                "matiere": {
+                                    "id": "68ec2f35d4a21893afcb82c4",
+                                    "nom": "Mathématiques Générales",
+                                    "code": "MATH101",
+                                    "coefficient": 3
+                                },
+                                "notes": [
+                                    {
+                                        "id": "690c88d3e04ba9d5388e8a4b",
+                                        "valeur": 10,
+                                        "coefficient": 1,
+                                        "typeEvaluation": "examen"
+                                    }
+                                ],
+                                "moyenne": null,
+                                "stats": {
+                                    "totalNotes": 1,
+                                    "notesValidees": 1,
+                                    "moyenne": 10
+                                }
+                            }
+                        },
+                        "stats": {
+                            "totalNotes": 1,
+                            "notesValidees": 1,
+                            "notesBrouillon": 0,
+                            "notesEnAttente": 0,
+                            "moyenneGenerale": 10
+                        }
+                    }
+                ]
+            },
+            {
+                "anneeScolaire": {
+                    "id": "68ec30d6c23fa6d87092519a",
+                    "nom": "2024-2025",
+                    "dateDebut": "2025-09-01T00:00:00.000Z",
+                    "dateFin": "2026-07-15T00:00:00.000Z"
+                },
+                "periodes": [
+                    {
+                        "periode": {
+                            "id": "68ec2ab3d4a21893afcb7ff1",
+                            "nom": "2ème semestre",
+                            "dateDebut": "2026-02-15T00:00:00.000Z",
+                            "dateFin": "2026-07-15T00:00:00.000Z"
+                        },
+                        "notes": [
+                            {
+                                "id": "690c8842e04ba9d5388e8993",
+                                "valeur": 14,
+                                "coefficient": 2,
+                                "typeEvaluation": "devoir",
+                                "sousTypeEvaluation": "controle_continu",
+                                "dateEvaluation": "2025-11-10T00:00:00.000Z",
+                                "dateSaisie": "2025-11-06T11:36:34.793Z",
+                                "appreciation": "",
+                                "statut": "publie",
+                                "dateValidation": "2025-11-06T11:36:34.792Z",
+                                "matiere": {
+                                    "id": "68ec2f35d4a21893afcb82c4",
+                                    "nom": "Mathématiques Générales",
+                                    "code": "MATH101",
+                                    "couleur": "#d24d14",
+                                    "coefficient": 3
+                                },
+                                "classe": {
+                                    "id": "68f55e582bbc174f10b323d2",
+                                    "nom": "Licence 1 - A",
+                                    "niveau": "Licence 1"
+                                },
+                                "enseignant": {
+                                    "id": "68ec4175d4a21893afcb923f",
+                                    "nom": "koffi",
+                                    "prenom": "boris"
+                                },
+                                "validePar": {
+                                    "id": "68ec4175d4a21893afcb923f",
+                                    "nom": "koffi",
+                                    "prenom": "boris"
+                                }
+                            },
+                            {
+                                "id": "690c8842e04ba9d5388e898f",
+                                "valeur": 12,
+                                "coefficient": 1,
+                                "typeEvaluation": "devoir",
+                                "sousTypeEvaluation": "controle_continu",
+                                "dateEvaluation": "2025-11-06T00:00:00.000Z",
+                                "dateSaisie": "2025-11-06T11:36:34.525Z",
+                                "appreciation": "",
+                                "statut": "publie",
+                                "dateValidation": "2025-11-06T11:36:34.521Z",
+                                "matiere": {
+                                    "id": "68ec2f35d4a21893afcb82c4",
+                                    "nom": "Mathématiques Générales",
+                                    "code": "MATH101",
+                                    "couleur": "#d24d14",
+                                    "coefficient": 3
+                                },
+                                "classe": {
+                                    "id": "68f55e582bbc174f10b323d2",
+                                    "nom": "Licence 1 - A",
+                                    "niveau": "Licence 1"
+                                },
+                                "enseignant": {
+                                    "id": "68ec4175d4a21893afcb923f",
+                                    "nom": "koffi",
+                                    "prenom": "boris"
+                                },
+                                "validePar": {
+                                    "id": "68ec4175d4a21893afcb923f",
+                                    "nom": "koffi",
+                                    "prenom": "boris"
+                                }
+                            }
+                        ],
+                        "matieres": {
+                            "68ec2f35d4a21893afcb82c4": {
+                                "matiere": {
+                                    "id": "68ec2f35d4a21893afcb82c4",
+                                    "nom": "Mathématiques Générales",
+                                    "code": "MATH101",
+                                    "coefficient": 3
+                                },
+                                "notes": [
+                                    {
+                                        "id": "690c8842e04ba9d5388e8993",
+                                        "valeur": 14,
+                                        "coefficient": 2,
+                                        "typeEvaluation": "devoir"
+                                    },
+                                    {
+                                        "id": "690c8842e04ba9d5388e898f",
+                                        "valeur": 12,
+                                        "coefficient": 1,
+                                        "typeEvaluation": "devoir"
+                                    }
+                                ],
+                                "moyenne": null,
+                                "stats": {
+                                    "totalNotes": 2,
+                                    "notesValidees": 2,
+                                    "moyenne": 13.33
+                                }
+                            }
+                        },
+                        "stats": {
+                            "totalNotes": 2,
+                            "notesValidees": 2,
+                            "notesBrouillon": 0,
+                            "notesEnAttente": 0,
+                            "moyenneGenerale": 13.33
+                        }
+                    },
+                    {
+                        "periode": {
+                            "id": "68ec38c9c23fa6d870925422",
+                            "nom": "1er semestre",
+                            "dateDebut": "2025-09-01T00:00:00.000Z",
+                            "dateFin": "2026-01-31T00:00:00.000Z",
+                            "ordre": 1
+                        },
+                        "notes": [
+                            {
+                                "id": "68fca37eb4f56e3e82910405",
+                                "valeur": 14,
+                                "coefficient": 1,
+                                "typeEvaluation": "examen",
+                                "sousTypeEvaluation": "examen_final",
+                                "dateEvaluation": "2025-10-25T00:00:00.000Z",
+                                "dateSaisie": "2025-10-25T10:16:30.590Z",
+                                "appreciation": "",
+                                "statut": "publie",
+                                "dateValidation": "2025-10-25T10:16:30.590Z",
+                                "matiere": {
+                                    "id": "68ec2f35d4a21893afcb82c4",
+                                    "nom": "Mathématiques Générales",
+                                    "code": "MATH101",
+                                    "couleur": "#d24d14",
+                                    "coefficient": 3
+                                },
+                                "classe": {
+                                    "id": "68ec3c8fd4a21893afcb8a36",
+                                    "nom": "Licence 1 - A",
+                                    "niveau": "L1"
+                                },
+                                "enseignant": null,
+                                "validePar": {
+                                    "id": "68c1b3f940286a6ec09d4801",
+                                    "nom": "Coulibaly",
+                                    "prenom": "Agnès"
+                                }
+                            },
+                            {
+                                "id": "68fca37eb4f56e3e82910401",
+                                "valeur": 12,
+                                "coefficient": 1,
+                                "typeEvaluation": "examen",
+                                "sousTypeEvaluation": "examen_final",
+                                "dateEvaluation": "2025-10-25T00:00:00.000Z",
+                                "dateSaisie": "2025-10-25T10:16:30.569Z",
+                                "appreciation": "",
+                                "statut": "publie",
+                                "dateValidation": "2025-10-25T10:16:30.563Z",
+                                "matiere": {
+                                    "id": "68ec2fc1d4a21893afcb82d3",
+                                    "nom": "Physique Fondamentale",
+                                    "code": "PHYS101",
+                                    "couleur": "#13aa15",
+                                    "coefficient": 4
+                                },
+                                "classe": {
+                                    "id": "68ec3c8fd4a21893afcb8a36",
+                                    "nom": "Licence 1 - A",
+                                    "niveau": "L1"
+                                },
+                                "enseignant": null,
+                                "validePar": {
+                                    "id": "68c1b3f940286a6ec09d4801",
+                                    "nom": "Coulibaly",
+                                    "prenom": "Agnès"
+                                }
+                            },
+                            {
+                                "id": "68f421456e902d13b8476d8e",
+                                "valeur": 14,
+                                "coefficient": 2,
+                                "typeEvaluation": "devoir",
+                                "dateEvaluation": "2025-10-21T00:00:00.000Z",
+                                "dateSaisie": "2025-10-18T23:22:45.340Z",
+                                "appreciation": "",
+                                "statut": "publie",
+                                "dateValidation": "2025-10-18T23:22:51.573Z",
+                                "matiere": {
+                                    "id": "68ec2fc1d4a21893afcb82d3",
+                                    "nom": "Physique Fondamentale",
+                                    "code": "PHYS101",
+                                    "couleur": "#13aa15",
+                                    "coefficient": 4
+                                },
+                                "classe": {
+                                    "id": "68ec3c8fd4a21893afcb8a36",
+                                    "nom": "Licence 1 - A",
+                                    "niveau": "L1"
+                                },
+                                "enseignant": {
+                                    "id": "68ec4175d4a21893afcb923f",
+                                    "nom": "koffi",
+                                    "prenom": "boris"
+                                },
+                                "validePar": {
+                                    "id": "68ec4175d4a21893afcb923f",
+                                    "nom": "koffi",
+                                    "prenom": "boris"
+                                }
+                            },
+                            {
+                                "id": "68f5418b73543b0ac137400e",
+                                "valeur": 10,
+                                "coefficient": 1,
+                                "typeEvaluation": "examen",
+                                "sousTypeEvaluation": "examen_final",
+                                "dateEvaluation": "2025-10-19T00:00:00.000Z",
+                                "dateSaisie": "2025-10-19T19:52:43.174Z",
+                                "appreciation": "",
+                                "statut": "publie",
+                                "dateValidation": "2025-10-19T19:52:43.174Z",
+                                "matiere": {
+                                    "id": "68ec2fc1d4a21893afcb82d3",
+                                    "nom": "Physique Fondamentale",
+                                    "code": "PHYS101",
+                                    "couleur": "#13aa15",
+                                    "coefficient": 4
+                                },
+                                "classe": {
+                                    "id": "68ec3c8fd4a21893afcb8a36",
+                                    "nom": "Licence 1 - A",
+                                    "niveau": "L1"
+                                },
+                                "enseignant": null,
+                                "validePar": {
+                                    "id": "68c1b3f940286a6ec09d4801",
+                                    "nom": "Coulibaly",
+                                    "prenom": "Agnès"
+                                }
+                            },
+                            {
+                                "id": "68f5418b73543b0ac137400b",
+                                "valeur": 13,
+                                "coefficient": 1,
+                                "typeEvaluation": "examen",
+                                "sousTypeEvaluation": "examen_final",
+                                "dateEvaluation": "2025-10-19T00:00:00.000Z",
+                                "dateSaisie": "2025-10-19T19:52:43.147Z",
+                                "appreciation": "",
+                                "statut": "publie",
+                                "dateValidation": "2025-10-19T19:52:43.145Z",
+                                "matiere": {
+                                    "id": "68ec2f35d4a21893afcb82c4",
+                                    "nom": "Mathématiques Générales",
+                                    "code": "MATH101",
+                                    "couleur": "#d24d14",
+                                    "coefficient": 3
+                                },
+                                "classe": {
+                                    "id": "68ec3c8fd4a21893afcb8a36",
+                                    "nom": "Licence 1 - A",
+                                    "niveau": "L1"
+                                },
+                                "enseignant": null,
+                                "validePar": {
+                                    "id": "68c1b3f940286a6ec09d4801",
+                                    "nom": "Coulibaly",
+                                    "prenom": "Agnès"
+                                }
+                            },
+                            {
+                                "id": "68f4218f68a5b9edf6d0c9c5",
+                                "valeur": 13,
+                                "coefficient": 1,
+                                "typeEvaluation": "examen",
+                                "sousTypeEvaluation": "examen_final",
+                                "dateEvaluation": "2025-10-18T00:00:00.000Z",
+                                "dateSaisie": "2025-10-18T23:23:59.364Z",
+                                "appreciation": "",
+                                "statut": "publie",
+                                "dateValidation": "2025-10-18T23:23:59.363Z",
+                                "matiere": {
+                                    "id": "68ec2f35d4a21893afcb82c4",
+                                    "nom": "Mathématiques Générales",
+                                    "code": "MATH101",
+                                    "couleur": "#d24d14",
+                                    "coefficient": 3
+                                },
+                                "classe": {
+                                    "id": "68ec3c8fd4a21893afcb8a36",
+                                    "nom": "Licence 1 - A",
+                                    "niveau": "L1"
+                                },
+                                "enseignant": null,
+                                "validePar": {
+                                    "id": "68c1b3f940286a6ec09d4801",
+                                    "nom": "Coulibaly",
+                                    "prenom": "Agnès"
+                                }
+                            },
+                            {
+                                "id": "68f4218f68a5b9edf6d0c9c2",
+                                "valeur": 10,
+                                "coefficient": 1,
+                                "typeEvaluation": "examen",
+                                "sousTypeEvaluation": "examen_final",
+                                "dateEvaluation": "2025-10-18T00:00:00.000Z",
+                                "dateSaisie": "2025-10-18T23:23:59.354Z",
+                                "appreciation": "",
+                                "statut": "publie",
+                                "dateValidation": "2025-10-18T23:23:59.352Z",
+                                "matiere": {
+                                    "id": "68ec2fc1d4a21893afcb82d3",
+                                    "nom": "Physique Fondamentale",
+                                    "code": "PHYS101",
+                                    "couleur": "#13aa15",
+                                    "coefficient": 4
+                                },
+                                "classe": {
+                                    "id": "68ec3c8fd4a21893afcb8a36",
+                                    "nom": "Licence 1 - A",
+                                    "niveau": "L1"
+                                },
+                                "enseignant": null,
+                                "validePar": {
+                                    "id": "68c1b3f940286a6ec09d4801",
+                                    "nom": "Coulibaly",
+                                    "prenom": "Agnès"
+                                }
+                            },
+                            {
+                                "id": "68f421456e902d13b8476d8a",
+                                "valeur": 18,
+                                "coefficient": 1,
+                                "typeEvaluation": "devoir",
+                                "dateEvaluation": "2025-10-18T00:00:00.000Z",
+                                "dateSaisie": "2025-10-18T23:22:45.334Z",
+                                "appreciation": "",
+                                "statut": "publie",
+                                "dateValidation": "2025-10-18T23:22:51.564Z",
+                                "matiere": {
+                                    "id": "68ec2fc1d4a21893afcb82d3",
+                                    "nom": "Physique Fondamentale",
+                                    "code": "PHYS101",
+                                    "couleur": "#13aa15",
+                                    "coefficient": 4
+                                },
+                                "classe": {
+                                    "id": "68ec3c8fd4a21893afcb8a36",
+                                    "nom": "Licence 1 - A",
+                                    "niveau": "L1"
+                                },
+                                "enseignant": {
+                                    "id": "68ec4175d4a21893afcb923f",
+                                    "nom": "koffi",
+                                    "prenom": "boris"
+                                },
+                                "validePar": {
+                                    "id": "68ec4175d4a21893afcb923f",
+                                    "nom": "koffi",
+                                    "prenom": "boris"
+                                }
+                            },
+                            {
+                                "id": "68f4212e68a5b9edf6d0c8c1",
+                                "valeur": 13,
+                                "coefficient": 1,
+                                "typeEvaluation": "examen",
+                                "sousTypeEvaluation": "examen_final",
+                                "dateEvaluation": "2025-10-18T00:00:00.000Z",
+                                "dateSaisie": "2025-10-18T23:22:22.022Z",
+                                "appreciation": "",
+                                "statut": "publie",
+                                "dateValidation": "2025-10-18T23:22:22.021Z",
+                                "matiere": {
+                                    "id": "68ec2f35d4a21893afcb82c4",
+                                    "nom": "Mathématiques Générales",
+                                    "code": "MATH101",
+                                    "couleur": "#d24d14",
+                                    "coefficient": 3
+                                },
+                                "classe": {
+                                    "id": "68ec3c8fd4a21893afcb8a36",
+                                    "nom": "Licence 1 - A",
+                                    "niveau": "L1"
+                                },
+                                "enseignant": null,
+                                "validePar": {
+                                    "id": "68c1b3f940286a6ec09d4801",
+                                    "nom": "Coulibaly",
+                                    "prenom": "Agnès"
+                                }
+                            },
+                            {
+                                "id": "68f4212e68a5b9edf6d0c8be",
+                                "valeur": 10,
+                                "coefficient": 1,
+                                "typeEvaluation": "examen",
+                                "sousTypeEvaluation": "examen_final",
+                                "dateEvaluation": "2025-10-18T00:00:00.000Z",
+                                "dateSaisie": "2025-10-18T23:22:22.009Z",
+                                "appreciation": "",
+                                "statut": "publie",
+                                "dateValidation": "2025-10-18T23:22:22.007Z",
+                                "matiere": {
+                                    "id": "68ec2fc1d4a21893afcb82d3",
+                                    "nom": "Physique Fondamentale",
+                                    "code": "PHYS101",
+                                    "couleur": "#13aa15",
+                                    "coefficient": 4
+                                },
+                                "classe": {
+                                    "id": "68ec3c8fd4a21893afcb8a36",
+                                    "nom": "Licence 1 - A",
+                                    "niveau": "L1"
+                                },
+                                "enseignant": null,
+                                "validePar": {
+                                    "id": "68c1b3f940286a6ec09d4801",
+                                    "nom": "Coulibaly",
+                                    "prenom": "Agnès"
+                                }
+                            },
+                            {
+                                "id": "68f41e7668a5b9edf6d0c616",
+                                "valeur": 13,
+                                "coefficient": 1,
+                                "typeEvaluation": "examen",
+                                "sousTypeEvaluation": "examen_final",
+                                "dateEvaluation": "2025-10-18T00:00:00.000Z",
+                                "dateSaisie": "2025-10-18T23:10:46.466Z",
+                                "appreciation": "",
+                                "statut": "publie",
+                                "dateValidation": "2025-10-18T23:10:46.464Z",
+                                "matiere": {
+                                    "id": "68ec2f35d4a21893afcb82c4",
+                                    "nom": "Mathématiques Générales",
+                                    "code": "MATH101",
+                                    "couleur": "#d24d14",
+                                    "coefficient": 3
+                                },
+                                "classe": {
+                                    "id": "68ec3c8fd4a21893afcb8a36",
+                                    "nom": "Licence 1 - A",
+                                    "niveau": "L1"
+                                },
+                                "enseignant": null,
+                                "validePar": {
+                                    "id": "68c1b3f940286a6ec09d4801",
+                                    "nom": "Coulibaly",
+                                    "prenom": "Agnès"
+                                }
+                            },
+                            {
+                                "id": "68f41e7668a5b9edf6d0c613",
+                                "valeur": 10,
+                                "coefficient": 1,
+                                "typeEvaluation": "examen",
+                                "sousTypeEvaluation": "examen_final",
+                                "dateEvaluation": "2025-10-18T00:00:00.000Z",
+                                "dateSaisie": "2025-10-18T23:10:46.439Z",
+                                "appreciation": "",
+                                "statut": "publie",
+                                "dateValidation": "2025-10-18T23:10:46.424Z",
+                                "matiere": {
+                                    "id": "68ec2fc1d4a21893afcb82d3",
+                                    "nom": "Physique Fondamentale",
+                                    "code": "PHYS101",
+                                    "couleur": "#13aa15",
+                                    "coefficient": 4
+                                },
+                                "classe": {
+                                    "id": "68ec3c8fd4a21893afcb8a36",
+                                    "nom": "Licence 1 - A",
+                                    "niveau": "L1"
+                                },
+                                "enseignant": null,
+                                "validePar": {
+                                    "id": "68c1b3f940286a6ec09d4801",
+                                    "nom": "Coulibaly",
+                                    "prenom": "Agnès"
+                                }
+                            },
+                            {
+                                "id": "68f41df270595c1caafa69d7",
+                                "valeur": 10,
+                                "coefficient": 1,
+                                "typeEvaluation": "examen",
+                                "sousTypeEvaluation": "examen_final",
+                                "dateEvaluation": "2025-10-18T00:00:00.000Z",
+                                "dateSaisie": "2025-10-18T23:08:34.748Z",
+                                "appreciation": "",
+                                "statut": "valide",
+                                "dateValidation": "2025-10-18T23:08:34.747Z",
+                                "matiere": {
+                                    "id": "68ec2fc1d4a21893afcb82d3",
+                                    "nom": "Physique Fondamentale",
+                                    "code": "PHYS101",
+                                    "couleur": "#13aa15",
+                                    "coefficient": 4
+                                },
+                                "classe": {
+                                    "id": "68ec3c8fd4a21893afcb8a36",
+                                    "nom": "Licence 1 - A",
+                                    "niveau": "L1"
+                                },
+                                "enseignant": null,
+                                "validePar": {
+                                    "id": "68c1b3f940286a6ec09d4801",
+                                    "nom": "Coulibaly",
+                                    "prenom": "Agnès"
+                                }
+                            },
+                            {
+                                "id": "68f41df270595c1caafa69d4",
+                                "valeur": 13,
+                                "coefficient": 1,
+                                "typeEvaluation": "examen",
+                                "sousTypeEvaluation": "examen_final",
+                                "dateEvaluation": "2025-10-18T00:00:00.000Z",
+                                "dateSaisie": "2025-10-18T23:08:34.614Z",
+                                "appreciation": "",
+                                "statut": "valide",
+                                "dateValidation": "2025-10-18T23:08:34.613Z",
+                                "matiere": {
+                                    "id": "68ec2f35d4a21893afcb82c4",
+                                    "nom": "Mathématiques Générales",
+                                    "code": "MATH101",
+                                    "couleur": "#d24d14",
+                                    "coefficient": 3
+                                },
+                                "classe": {
+                                    "id": "68ec3c8fd4a21893afcb8a36",
+                                    "nom": "Licence 1 - A",
+                                    "niveau": "L1"
+                                },
+                                "enseignant": null,
+                                "validePar": {
+                                    "id": "68c1b3f940286a6ec09d4801",
+                                    "nom": "Coulibaly",
+                                    "prenom": "Agnès"
+                                }
+                            },
+                            {
+                                "id": "68ed68aa84c630fffa4a4a75",
+                                "valeur": 14,
+                                "coefficient": 2,
+                                "typeEvaluation": "devoir",
+                                "dateEvaluation": "2025-10-15T00:00:00.000Z",
+                                "dateSaisie": "2025-10-13T21:01:30.755Z",
+                                "appreciation": "",
+                                "statut": "publie",
+                                "dateValidation": "2025-10-18T23:23:04.693Z",
+                                "matiere": {
+                                    "id": "68ec2f35d4a21893afcb82c4",
+                                    "nom": "Mathématiques Générales",
+                                    "code": "MATH101",
+                                    "couleur": "#d24d14",
+                                    "coefficient": 3
+                                },
+                                "classe": {
+                                    "id": "68ec3c8fd4a21893afcb8a36",
+                                    "nom": "Licence 1 - A",
+                                    "niveau": "L1"
+                                },
+                                "enseignant": {
+                                    "id": "68ec4175d4a21893afcb923f",
+                                    "nom": "koffi",
+                                    "prenom": "boris"
+                                },
+                                "validePar": {
+                                    "id": "68ec4175d4a21893afcb923f",
+                                    "nom": "koffi",
+                                    "prenom": "boris"
+                                }
+                            },
+                            {
+                                "id": "68ed68aa84c630fffa4a4a71",
+                                "valeur": 12,
+                                "coefficient": 1,
+                                "typeEvaluation": "devoir",
+                                "dateEvaluation": "2025-10-13T00:00:00.000Z",
+                                "dateSaisie": "2025-10-13T21:01:30.523Z",
+                                "appreciation": "",
+                                "statut": "publie",
+                                "dateValidation": "2025-10-18T23:23:04.685Z",
+                                "matiere": {
+                                    "id": "68ec2f35d4a21893afcb82c4",
+                                    "nom": "Mathématiques Générales",
+                                    "code": "MATH101",
+                                    "couleur": "#d24d14",
+                                    "coefficient": 3
+                                },
+                                "classe": {
+                                    "id": "68ec3c8fd4a21893afcb8a36",
+                                    "nom": "Licence 1 - A",
+                                    "niveau": "L1"
+                                },
+                                "enseignant": {
+                                    "id": "68ec4175d4a21893afcb923f",
+                                    "nom": "koffi",
+                                    "prenom": "boris"
+                                },
+                                "validePar": {
+                                    "id": "68ec4175d4a21893afcb923f",
+                                    "nom": "koffi",
+                                    "prenom": "boris"
+                                }
+                            }
+                        ],
+                        "matieres": {
+                            "68ec2f35d4a21893afcb82c4": {
+                                "matiere": {
+                                    "id": "68ec2f35d4a21893afcb82c4",
+                                    "nom": "Mathématiques Générales",
+                                    "code": "MATH101",
+                                    "coefficient": 3
+                                },
+                                "notes": [
+                                    {
+                                        "id": "68fca37eb4f56e3e82910405",
+                                        "valeur": 14,
+                                        "coefficient": 1,
+                                        "typeEvaluation": "examen"
+                                    },
+                                    {
+                                        "id": "68f5418b73543b0ac137400b",
+                                        "valeur": 13,
+                                        "coefficient": 1,
+                                        "typeEvaluation": "examen"
+                                    },
+                                    {
+                                        "id": "68f4218f68a5b9edf6d0c9c5",
+                                        "valeur": 13,
+                                        "coefficient": 1,
+                                        "typeEvaluation": "examen"
+                                    },
+                                    {
+                                        "id": "68f4212e68a5b9edf6d0c8c1",
+                                        "valeur": 13,
+                                        "coefficient": 1,
+                                        "typeEvaluation": "examen"
+                                    },
+                                    {
+                                        "id": "68f41e7668a5b9edf6d0c616",
+                                        "valeur": 13,
+                                        "coefficient": 1,
+                                        "typeEvaluation": "examen"
+                                    },
+                                    {
+                                        "id": "68f41df270595c1caafa69d4",
+                                        "valeur": 13,
+                                        "coefficient": 1,
+                                        "typeEvaluation": "examen"
+                                    },
+                                    {
+                                        "id": "68ed68aa84c630fffa4a4a75",
+                                        "valeur": 14,
+                                        "coefficient": 2,
+                                        "typeEvaluation": "devoir"
+                                    },
+                                    {
+                                        "id": "68ed68aa84c630fffa4a4a71",
+                                        "valeur": 12,
+                                        "coefficient": 1,
+                                        "typeEvaluation": "devoir"
+                                    }
+                                ],
+                                "moyenne": null,
+                                "stats": {
+                                    "totalNotes": 8,
+                                    "notesValidees": 8,
+                                    "moyenne": 13.22
+                                }
+                            },
+                            "68ec2fc1d4a21893afcb82d3": {
+                                "matiere": {
+                                    "id": "68ec2fc1d4a21893afcb82d3",
+                                    "nom": "Physique Fondamentale",
+                                    "code": "PHYS101",
+                                    "coefficient": 4
+                                },
+                                "notes": [
+                                    {
+                                        "id": "68fca37eb4f56e3e82910401",
+                                        "valeur": 12,
+                                        "coefficient": 1,
+                                        "typeEvaluation": "examen"
+                                    },
+                                    {
+                                        "id": "68f421456e902d13b8476d8e",
+                                        "valeur": 14,
+                                        "coefficient": 2,
+                                        "typeEvaluation": "devoir"
+                                    },
+                                    {
+                                        "id": "68f5418b73543b0ac137400e",
+                                        "valeur": 10,
+                                        "coefficient": 1,
+                                        "typeEvaluation": "examen"
+                                    },
+                                    {
+                                        "id": "68f4218f68a5b9edf6d0c9c2",
+                                        "valeur": 10,
+                                        "coefficient": 1,
+                                        "typeEvaluation": "examen"
+                                    },
+                                    {
+                                        "id": "68f421456e902d13b8476d8a",
+                                        "valeur": 18,
+                                        "coefficient": 1,
+                                        "typeEvaluation": "devoir"
+                                    },
+                                    {
+                                        "id": "68f4212e68a5b9edf6d0c8be",
+                                        "valeur": 10,
+                                        "coefficient": 1,
+                                        "typeEvaluation": "examen"
+                                    },
+                                    {
+                                        "id": "68f41e7668a5b9edf6d0c613",
+                                        "valeur": 10,
+                                        "coefficient": 1,
+                                        "typeEvaluation": "examen"
+                                    },
+                                    {
+                                        "id": "68f41df270595c1caafa69d7",
+                                        "valeur": 10,
+                                        "coefficient": 1,
+                                        "typeEvaluation": "examen"
+                                    }
+                                ],
+                                "moyenne": null,
+                                "stats": {
+                                    "totalNotes": 8,
+                                    "notesValidees": 8,
+                                    "moyenne": 12
+                                }
+                            }
+                        },
+                        "stats": {
+                            "totalNotes": 16,
+                            "notesValidees": 16,
+                            "notesBrouillon": 0,
+                            "notesEnAttente": 0,
+                            "moyenneGenerale": 12.52
+                        }
+                    }
+                ]
+            }
+        ],
+        "statsGlobales": {
+            "totalNotes": 19,
+            "totalAnnees": 2,
+            "totalPeriodes": 3,
+            "totalMatieres": 2
+        }
+    }
+}

@@ -15,10 +15,18 @@ import { router } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useNotifications } from '../contexts/NotificationContext'; // ⬅️ AJOUTER
+import { formatDistanceToNow } from 'date-fns'; // ⬅️ INSTALLER: npm install date-fns
+import { fr } from 'date-fns/locale';
 
 export default function NotificationsScreen() {
   const { user, showErrorToast, showSuccessToast } = useAuth();
   const { t } = useLanguage();
+  const { 
+    refreshUnreadCount, // ⬅️ Pour mettre à jour le compteur
+    loadNotifications: reloadNotifications // ⬅️ Pour recharger les notifs
+  } = useNotifications();
+  
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -54,8 +62,11 @@ export default function NotificationsScreen() {
         notificationId: notificationId
       });
       
-      // Mettre à jour l'état local pour supprimer la notification
+      // Mettre à jour l'état local
       setNotifications(prev => prev.filter(notif => notif._id !== notificationId));
+      
+      // ⬇️ METTRE À JOUR LE COMPTEUR GLOBAL
+      await refreshUnreadCount();
       
       // Vérifier s'il reste des notifications
       if (notifications.length === 1) {
@@ -80,6 +91,10 @@ export default function NotificationsScreen() {
       
       setNotifications([]);
       setHasNotifications(false);
+      
+      // ⬇️ METTRE À JOUR LE COMPTEUR GLOBAL
+      await refreshUnreadCount();
+      
       showSuccessToast('Succès', t('notifications.markAllAsRead'));
     } catch (error) {
       console.error('Erreur lors du marquage des notifications:', error);
@@ -93,7 +108,6 @@ export default function NotificationsScreen() {
       const response = await api.get(`/notifications/${notificationId}`);
       
       if (response.data.success) {
-        // Naviguer vers l'écran de détails avec les données de la notification
         router.push({
           pathname: '/notification_detail',
           params: { 
@@ -101,7 +115,7 @@ export default function NotificationsScreen() {
           }
         });
         
-        // Marquer comme lue après avoir consulté les détails
+        // Marquer comme lue après avoir consulté
         markAsRead(notificationId);
       }
     } catch (error) {
@@ -111,9 +125,10 @@ export default function NotificationsScreen() {
   };
 
   // Gérer le rafraîchissement
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setRefreshing(true);
-    fetchNotifications();
+    await fetchNotifications();
+    await reloadNotifications(); // ⬅️ Recharger aussi le contexte
   };
 
   // Charger les notifications au démarrage
@@ -121,7 +136,19 @@ export default function NotificationsScreen() {
     fetchNotifications();
   }, []);
 
-  // Formater la date
+  // ⬇️ NOUVELLE FONCTION: Formater la date relative
+  const formatRelativeDate = (dateString) => {
+    try {
+      return formatDistanceToNow(new Date(dateString), {
+        addSuffix: true,
+        locale: fr,
+      });
+    } catch (error) {
+      return formatDate(dateString);
+    }
+  };
+
+  // Formater la date (fonction existante - garder en fallback)
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-FR', {
@@ -131,32 +158,23 @@ export default function NotificationsScreen() {
     });
   };
 
-  // Formater l'heure
-  const formatTime = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('fr-FR', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   // Obtenir l'icône en fonction du type de notification
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'systeme':
-        return '📱';
+        return { icon: 'notifications-outline', color: '#3B82F6' };
       case 'paiement':
-        return '💳';
+        return { icon: 'cash-outline', color: '#10B981' };
       case 'examen':
-        return '📝';
+        return { icon: 'school-outline', color: '#8B5CF6' };
       case 'resultat':
-        return '🏆';
+        return { icon: 'trophy-outline', color: '#F59E0B' };
       case 'absence':
-        return '📅';
+        return { icon: 'calendar-outline', color: '#EF4444' };
       case 'message':
-        return '💬';
+        return { icon: 'chatbubble-outline', color: '#EC4899' };
       default:
-        return '📢';
+        return { icon: 'information-circle-outline', color: '#6B7280' };
     }
   };
 
@@ -179,88 +197,110 @@ export default function NotificationsScreen() {
     </View>
   );
 
-  const renderNotifications = () => (
-    <ScrollView 
-      style={styles.notificationsList}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-          colors={['#007AFF']}
-          tintColor="#007AFF"
-        />
-      }
-    >
-      {notifications.length > 1 && (
-        <View style={styles.actionsHeader}>
-          <TouchableOpacity 
-            style={styles.markAllButton}
-            onPress={markAllAsRead}
-          >
-            <Text style={styles.markAllButtonText}>{t('notifications.markAllAsRead')}</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-      
-      {notifications.map((notification) => (
-        <TouchableOpacity 
-          key={notification._id} 
-          style={styles.notificationItem}
-          onPress={() => viewNotificationDetails(notification._id)}
-        >
-          <View style={styles.notificationIcon}>
-            <Text style={styles.emoji}>
-              {getNotificationIcon(notification.type)}
+  const renderNotifications = () => {
+    const notifIcon = getNotificationIcon(notifications[0]?.type);
+    
+    return (
+      <ScrollView 
+        style={styles.notificationsList}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={['#007AFF']}
+            tintColor="#007AFF"
+          />
+        }
+      >
+        {notifications.length > 1 && (
+          <View style={styles.actionsHeader}>
+            <Text style={styles.notificationCount}>
+              {notifications.length} notification{notifications.length > 1 ? 's' : ''}
             </Text>
+            <TouchableOpacity 
+              style={styles.markAllButton}
+              onPress={markAllAsRead}
+            >
+              <Ionicons name="checkmark-done-outline" size={18} color="#007AFF" />
+              <Text style={styles.markAllButtonText}>{t('notifications.markAllAsRead')}</Text>
+            </TouchableOpacity>
           </View>
+        )}
+        
+        {notifications.map((notification) => {
+          const iconData = getNotificationIcon(notification.type);
           
-          <View style={styles.notificationContent}>
-            <Text style={styles.notificationTitle}>{notification.titre}</Text>
-            <Text style={styles.notificationMessage}>{notification.message}</Text>
-            <Text style={styles.notificationTime}>
-              {t('notifications.time', { 
-                date: formatDate(notification.dateEnvoi), 
-                time: formatTime(notification.dateEnvoi) 
-              })}
-            </Text>
-            
-            <View style={styles.actionButtons}>
-              <TouchableOpacity 
-                style={styles.readButton}
-                onPress={(e) => {
-                  e.stopPropagation(); // Empêcher la propagation vers le parent
-                  markAsRead(notification._id);
-                }}
-              >
-                <Text style={styles.readButtonText}>{t('notifications.markAsRead')}</Text>
-              </TouchableOpacity>
+          return (
+            <TouchableOpacity 
+              key={notification._id} 
+              style={styles.notificationItem}
+              onPress={() => viewNotificationDetails(notification._id)}
+              activeOpacity={0.7}
+            >
+              {/* Icône avec couleur dynamique */}
+              <View style={[styles.notificationIconContainer, { backgroundColor: iconData.color + '20' }]}>
+                <Ionicons name={iconData.icon} size={24} color={iconData.color} />
+              </View>
               
-              {notification.type === 'paiement' && (
-                <TouchableOpacity 
-                  style={styles.payButton}
-                  onPress={(e) => {
-                    e.stopPropagation(); // Empêcher la propagation vers le parent
-                    router.push('/payment');
-                  }}
-                >
-                  <Text style={styles.payButtonText}>{t('notifications.pay')}</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
-  );
+              <View style={styles.notificationContent}>
+                <View style={styles.notificationHeader}>
+                  <Text style={styles.notificationTitle} numberOfLines={2}>
+                    {notification.titre}
+                  </Text>
+                  {/* Point non lu */}
+                  <View style={styles.unreadDot} />
+                </View>
+                
+                <Text style={styles.notificationMessage} numberOfLines={2}>
+                  {notification.message}
+                </Text>
+                
+                {/* Date relative */}
+                <Text style={styles.notificationTime}>
+                  {formatRelativeDate(notification.dateEnvoi)}
+                </Text>
+                
+                <View style={styles.actionButtons}>
+                  <TouchableOpacity 
+                    style={styles.readButton}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      markAsRead(notification._id);
+                    }}
+                  >
+                    <Ionicons name="checkmark-outline" size={16} color="#666" />
+                    <Text style={styles.readButtonText}>{t('notifications.markAsRead')}</Text>
+                  </TouchableOpacity>
+                  
+                  {notification.type === 'paiement' && (
+                    <TouchableOpacity 
+                      style={styles.payButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        router.push('/payment');
+                      }}
+                    >
+                      <Ionicons name="card-outline" size={16} color="white" />
+                      <Text style={styles.payButtonText}>{t('notifications.pay')}</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+    );
+  };
 
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor="white" />
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color="#333" onPress={() => router.push('home')} />
+          <TouchableOpacity style={styles.backButton} onPress={() => router.push('home')}>
+            <Ionicons name="chevron-back" size={24} color="#333" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t('notifications.title')}</Text>
           <View style={styles.placeholder} />
@@ -280,8 +320,8 @@ export default function NotificationsScreen() {
       
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color="#333" onPress={() => router.push('home')} />
+        <TouchableOpacity style={styles.backButton} onPress={() => router.push('home')}>
+          <Ionicons name="chevron-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('notifications.title')}</Text>
         <TouchableOpacity onPress={handleRefresh}>
@@ -294,6 +334,7 @@ export default function NotificationsScreen() {
   );
 }
 
+// ⬇️ STYLES AMÉLIORÉS
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -309,6 +350,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 3,
   },
   backButton: {
     padding: 5,
@@ -321,7 +367,6 @@ const styles = StyleSheet.create({
   placeholder: {
     width: 24,
   },
-  // Loading State
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -332,7 +377,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
-  // Empty State Styles
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -372,20 +416,28 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontWeight: '500',
   },
-  // Notifications List Styles
   notificationsList: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: '#f8f9fa',
   },
   actionsHeader: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 12,
+    backgroundColor: 'white',
     borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
+    borderBottomColor: '#f0f0f0',
+  },
+  notificationCount: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
   },
   markAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 5,
     paddingHorizontal: 10,
   },
@@ -393,33 +445,53 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#007AFF',
     fontWeight: '500',
+    marginLeft: 4,
   },
   notificationItem: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
+    backgroundColor: 'white',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    marginHorizontal: 12,
+    marginVertical: 6,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  notificationIcon: {
-    width: 40,
+  notificationIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingTop: 2,
-  },
-  emoji: {
-    fontSize: 24,
+    marginRight: 12,
   },
   notificationContent: {
     flex: 1,
-    marginLeft: 15,
+  },
+  notificationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 6,
   },
   notificationTitle: {
+    flex: 1,
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 5,
     lineHeight: 22,
+  },
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#007AFF',
+    marginLeft: 8,
+    marginTop: 7,
   },
   notificationMessage: {
     fontSize: 14,
@@ -430,33 +502,39 @@ const styles = StyleSheet.create({
   notificationTime: {
     fontSize: 12,
     color: '#999',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   actionButtons: {
     flexDirection: 'row',
-    marginTop: 5,
+    marginTop: 4,
   },
   readButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#f0f0f0',
-    paddingHorizontal: 15,
+    paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 6,
-    marginRight: 10,
+    marginRight: 8,
   },
   readButtonText: {
     color: '#666',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
+    marginLeft: 4,
   },
   payButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#007AFF',
-    paddingHorizontal: 15,
+    paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 6,
   },
   payButtonText: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
+    marginLeft: 4,
   },
 });

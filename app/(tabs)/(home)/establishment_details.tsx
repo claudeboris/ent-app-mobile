@@ -16,10 +16,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useLanguage } from '../../../contexts/LanguageContext'; // Import du contexte de langue
 import api from '../../../services/api';
 
 export default function OlsonHartmannScreen() {
   const { user, showErrorToast, showSuccessToast } = useAuth();
+  const { t } = useLanguage(); // Hook pour les traductions
   const [activeTab, setActiveTab] = useState('apropos');
   const [etablissementData, setEtablissementData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,7 +37,7 @@ export default function OlsonHartmannScreen() {
       setEtablissementData(response.data.data.etablissement);
     } catch (error) {
       console.error('Erreur lors du chargement des données de l\'établissement:', error);
-      showErrorToast('Erreur', 'Impossible de charger les informations de l\'établissement');
+      showErrorToast(t('error.title'), t('establishment.loadingError'));
     } finally {
       setIsLoading(false);
     }
@@ -65,11 +67,11 @@ export default function OlsonHartmannScreen() {
       router.push(document.route);
     } else if (document.url) {
       Linking.openURL(document.url).catch(err => {
-        showErrorToast('Erreur', 'Impossible d\'ouvrir le document');
+        showErrorToast(t('error.title'), t('establishment.documentOpenError'));
         console.error('Erreur lors de l\'ouverture du document:', err);
       });
     } else {
-      Alert.alert('Document', `Document: ${document.title}`);
+      Alert.alert(t('establishment.document'), `${t('establishment.document')}: ${document.title}`);
     }
   };
 
@@ -82,9 +84,9 @@ export default function OlsonHartmannScreen() {
       return (
         <View style={styles.noDocumentsContainer}>
           <Ionicons name="document-outline" size={60} color="#ccc" />
-          <Text style={styles.noDocumentsTitle}>Aucun document disponible</Text>
+          <Text style={styles.noDocumentsTitle}>{t('establishment.noDocuments')}</Text>
           <Text style={styles.noDocumentsSubtitle}>
-            Les documents de l'établissement seront bientôt disponibles.
+            {t('establishment.noDocumentsSubtitle')}
           </Text>
         </View>
       );
@@ -156,7 +158,7 @@ export default function OlsonHartmannScreen() {
               style={[styles.infoText, styles.linkText]}
               onPress={() => {
                 Linking.openURL(contacts.siteWeb).catch(err => {
-                  showErrorToast('Erreur', 'Impossible d\'ouvrir le site web');
+                  showErrorToast(t('error.title'), t('establishment.websiteOpenError'));
                   console.error('Erreur lors de l\'ouverture du site web:', err);
                 });
               }}
@@ -173,7 +175,7 @@ export default function OlsonHartmannScreen() {
         
         <View style={styles.infoItem}>
           <Ionicons name="school-outline" size={20} color="#666" />
-          <Text style={styles.infoText}>École {categorie} - {type}</Text>
+          <Text style={styles.infoText}>{t('establishment.schoolType', { category: categorie, type })}</Text>
         </View>
         
         {description && (
@@ -192,7 +194,7 @@ export default function OlsonHartmannScreen() {
         <StatusBar barStyle="dark-content" backgroundColor="white" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Chargement des informations...</Text>
+          <Text style={styles.loadingText}>{t('establishment.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -208,7 +210,7 @@ export default function OlsonHartmannScreen() {
           <Ionicons name="chevron-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
-          {etablissementData ? `${etablissementData.nom} ${etablissementData.sigle ? `(${etablissementData.sigle})` : ''}` : 'Établissement'}
+          {etablissementData ? `${etablissementData.nom} ${etablissementData.sigle ? `(${etablissementData.sigle})` : ''}` : t('establishment.title')}
         </Text>
         <View style={styles.placeholder} />
       </View>
@@ -232,7 +234,7 @@ export default function OlsonHartmannScreen() {
             <View style={styles.logoContainer}>
               <Ionicons name="globe-outline" size={20} color="#333" />
               <Text style={styles.logoText}>
-                {etablissementData?.sigle || etablissementData?.nom || 'logo ipsum'}
+                {etablissementData?.sigle || etablissementData?.nom || t('establishment.logoPlaceholder')}
               </Text>
             </View>
           </View>
@@ -241,10 +243,10 @@ export default function OlsonHartmannScreen() {
         {/* School Info */}
         <View style={styles.schoolInfo}>
           <Text style={styles.schoolName}>
-            {etablissementData?.nom || 'Nom de l\'établissement'}
+            {etablissementData?.nom || t('establishment.namePlaceholder')}
           </Text>
           <Text style={styles.schoolAddress}>
-            {etablissementData ? formatAddress() : 'Adresse de l\'établissement'}
+            {etablissementData ? formatAddress() : t('establishment.addressPlaceholder')}
           </Text>
         </View>
         
@@ -255,16 +257,16 @@ export default function OlsonHartmannScreen() {
             onPress={() => {
               if (etablissementData?.contacts?.telephone) {
                 Linking.openURL(`tel:${etablissementData.contacts.telephone}`).catch(err => {
-                  showErrorToast('Erreur', 'Impossible d\'effectuer l\'appel');
+                  showErrorToast(t('error.title'), t('establishment.callError'));
                   console.error('Erreur lors de l\'appel téléphonique:', err);
                 });
               } else {
-                showErrorToast('Information', 'Aucun numéro de téléphone disponible');
+                showErrorToast(t('common.information'), t('establishment.noPhone'));
               }
             }}
           >
             <Ionicons name="call" size={18} color="white" />
-            <Text style={styles.buttonText}>Appeler</Text>
+            <Text style={styles.buttonText}>{t('establishment.call')}</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -272,16 +274,16 @@ export default function OlsonHartmannScreen() {
             onPress={() => {
               if (etablissementData?.contacts?.email) {
                 Linking.openURL(`mailto:${etablissementData.contacts.email}`).catch(err => {
-                  showErrorToast('Erreur', 'Impossible d\'envoyer un email');
+                  showErrorToast(t('error.title'), t('establishment.emailError'));
                   console.error('Erreur lors de l\'envoi d\'email:', err);
                 });
               } else {
-                showErrorToast('Information', 'Aucune adresse email disponible');
+                showErrorToast(t('common.information'), t('establishment.noEmail'));
               }
             }}
           >
             <Ionicons name="mail-outline" size={18} color="#007AFF" />
-            <Text style={styles.messageButtonText}>Message</Text>
+            <Text style={styles.messageButtonText}>{t('establishment.message')}</Text>
           </TouchableOpacity>
           
         </View>
@@ -302,7 +304,7 @@ export default function OlsonHartmannScreen() {
                 styles.tabText, 
                 activeTab === 'apropos' && styles.activeTabText
               ]}>
-                À propos
+                {t('establishment.about')}
               </Text>
             </TouchableOpacity>
             
@@ -319,7 +321,7 @@ export default function OlsonHartmannScreen() {
                 styles.tabText,
                 activeTab === 'documents' && styles.activeTabText
               ]}>
-                Documents
+                {t('establishment.documents')}
               </Text>
             </TouchableOpacity>
           </View>

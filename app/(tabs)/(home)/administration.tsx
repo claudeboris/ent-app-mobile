@@ -15,10 +15,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import api from '../../../services/api';
 
 export default function AdministrationScreen() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [staffMembers, setStaffMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -73,7 +75,7 @@ export default function AdministrationScreen() {
         <StatusBar barStyle="dark-content" backgroundColor="white" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Chargement du personnel...</Text>
+          <Text style={styles.loadingText}>{t('administration.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -88,7 +90,7 @@ export default function AdministrationScreen() {
         <TouchableOpacity style={styles.backButton}>
           <Ionicons name="chevron-back" size={24} color="#333" onPress={() => router.push('home')} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Administration</Text>
+        <Text style={styles.headerTitle}>{t('administration.title')}</Text>
         <View style={styles.placeholder} />
       </View>
       
@@ -117,10 +119,10 @@ export default function AdministrationScreen() {
                   {member.informationsSpecifiques.departement && ` - ${member.informationsSpecifiques.departement}`}
                 </Text>
                 {member.informationsSpecifiques.specialite && (
-                  <Text style={styles.staffSpecialty}>{member.informationsSpecifiques.specialite}</Text>
+                  <Text style={styles.staffSpecialty}>{t('administration.staffSpecialty')}: {member.informationsSpecifiques.specialite}</Text>
                 )}
                 {member.informationsSpecifiques.grade && (
-                  <Text style={styles.staffGrade}>{member.informationsSpecifiques.grade}</Text>
+                  <Text style={styles.staffGrade}>{t('administration.staffGrade')}: {member.informationsSpecifiques.grade}</Text>
                 )}
               </View>
               <View style={styles.actionButtons}>
@@ -144,7 +146,7 @@ export default function AdministrationScreen() {
         ) : (
           <View style={styles.noDataContainer}>
             <Ionicons name="people-outline" size={48} color="#ccc" />
-            <Text style={styles.noDataText}>Aucun membre du personnel trouvé</Text>
+            <Text style={styles.noDataText}>{t('administration.noData')}</Text>
           </View>
         )}
       </ScrollView>
