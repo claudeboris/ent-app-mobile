@@ -23,7 +23,7 @@
         "backgroundColor": "#ffffff"
       },
       "googleServicesFile": "./google-services.json",
-      "package": "com.boriso.educatifApp",
+      "package": "com.example.kalansoAndroid",
       "notification": {
         "icon": "./assets/images/adaptive-icon.png",
         "color": "#FF6B6B"

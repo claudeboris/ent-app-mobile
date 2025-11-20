@@ -82,7 +82,8 @@ export const translations = {
       school: "Scolaire",
       parent: "Parent",
       logout: "Se déconnecter",
-      logoutConfirmation: "Êtes-vous sûr de vouloir vous déconnecter ?"
+      logoutConfirmation: "Êtes-vous sûr de vouloir vous déconnecter ?",
+      title: "Quel type de profil êtes-vous?"
     },
     establishment: {
       title: "Établissement",
@@ -184,7 +185,7 @@ export const translations = {
       update: "Mettre à jour",
       yes: "Oui",
       no: "Non",
-      close: "Close"
+      close: "Fermer"
     },
 
     schedule: {
@@ -816,6 +817,7 @@ export const translations = {
       edit: "Edit",
       save: "Save",
       update: "Update",
+      close: "Close"
     },
     payments: {
       title: "Payments",
@@ -983,7 +985,8 @@ export const translations = {
       school: "School",
       parent: "Parent",
       logout: "Logout",
-      logoutConfirmation: "Are you sure you want to logout?"
+      logoutConfirmation: "Are you sure you want to logout?",
+      title: "What type of profile are you ?"
     },
     administration: {
       title: "Administration",

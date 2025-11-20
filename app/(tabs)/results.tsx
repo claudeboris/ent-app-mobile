@@ -487,7 +487,7 @@ export default function ResultsScreen() {
             style={styles.cancelButton} 
             onPress={() => setShowTeachersSheet(false)}
           >
-            <Text style={styles.cancelButtonText}>{t('common.close')}</Text>
+            <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -1330,7 +1330,7 @@ const styles = StyleSheet.create({
   unavailableSubtext: { fontSize: 14, color: '#999', textAlign: 'center', marginTop: 5 },
   downloadActionButton: { flexDirection: 'row', backgroundColor: '#007AFF', padding: 15, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginTop: 20 },
   downloadActionText: { color: 'white', fontWeight: '600', marginLeft: 8 },
-  cancelButton: { marginTop: 10, padding: 15, alignItems: 'center' },
+  cancelButton: { marginTop: 10, padding: 15, alignItems: 'center', },
   cancelButtonText: { color: '#666', fontSize: 16 },
   
   // Éléments existants
