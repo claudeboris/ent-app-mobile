@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, StatusBar, Dimensions, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, TextInput, StatusBar, Dimensions, Alert, Modal, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -140,173 +140,196 @@ export default function LoginScreen() {
   };
   
   return (
-    <>
+    <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="white" />
-      <View style={styles.container}>
-        
-        {/* Header avec bouton fermer */}
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.closeButton}
-            onPress={handleClose}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.closeIcon}>✕</Text>
-          </TouchableOpacity>
-        </View>
-        
-        {/* Content */}
-        <View style={styles.content}>
-          
-          {/* User Icon */}
-          <View style={styles.iconContainer}>
-            <View style={styles.userIconBg}>
-              <Text style={styles.userIcon}>👤</Text>
-            </View>
-          </View>
-          
-          {/* Title and subtitle */}
-          <View style={styles.titleContainer}>
-            <Text style={styles.title}>{t('login.title')}</Text>
-            <Text style={styles.subtitle}>{t('login.subtitle')}</Text>
-          </View>
-          
-          {/* Form */}
-          <View style={styles.form}>
-            
-            {/* Identifier field */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>{getIdentifierLabel()}</Text>
-              <TextInput
-                style={styles.textInput}
-                value={identifier}
-                onChangeText={setIdentifier}
-                placeholder={getIdentifierPlaceholder()}
-                placeholderTextColor="#999"
-                keyboardType={profileType === 'parent' ? 'phone-pad' : 'default'}
-                autoCapitalize="none"
-              />
-            </View>
-            
-            {/* Password field */}
-            <View style={styles.inputGroup}>
-              <View style={styles.passwordHeader}>
-                <Text style={styles.inputLabel}>{t('login.password')}</Text>
-                <TouchableOpacity onPress={handleForgotPassword}>
-                  <Text style={styles.forgotLink}>{t('login.forgot')}</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.passwordContainer}>
-                <TextInput
-                  style={styles.passwordInput}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="• • • • • • • • • •"
-                  placeholderTextColor="#999"
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                />
-                <TouchableOpacity 
-                  style={styles.eyeButton}
-                  onPress={() => setShowPassword(!showPassword)}
-                >
-                  <Ionicons 
-                    name={showPassword ? "eye-outline" : "eye-off-outline"} 
-                    size={20} 
-                    color="#666" 
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-            
-            {/* Remember me */}
-            <TouchableOpacity 
-              style={styles.rememberContainer}
-              onPress={() => setRememberMe(!rememberMe)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-                {rememberMe && <Text style={styles.checkmark}>✓</Text>}
-              </View>
-              <Text style={styles.rememberText}>{t('login.remember')}</Text>
-            </TouchableOpacity>
-            
-            {/* Login button */}
-            <TouchableOpacity
-              style={[styles.loginButton, isLoading && styles.disabledButton]}
-              onPress={handleLogin}
-              disabled={isLoading}
-              activeOpacity={0.9}
-            >
-              <Text style={styles.loginButtonText}>
-                {isLoading ? t('login.loading') : t('login.submit')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-      
-      {/* Modal Mot de passe oublié */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={forgotPasswordModalVisible}
-        onRequestClose={() => setForgotPasswordModalVisible(false)}
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
+        <ScrollView 
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <View style={styles.container}>
+            
+            {/* Header avec bouton fermer */}
+            <View style={styles.header}>
               <TouchableOpacity 
-                style={styles.modalCloseButton}
-                onPress={() => setForgotPasswordModalVisible(false)}
+                style={styles.closeButton}
+                onPress={handleClose}
+                activeOpacity={0.7}
               >
-                <Text style={styles.modalCloseIcon}>✕</Text>
+                <Text style={styles.closeIcon}>✕</Text>
               </TouchableOpacity>
             </View>
             
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>{t('forgotPassword.modalTitle')}</Text>
-              <Text style={styles.modalMessage}>
-                {t('forgotPassword.modalMessage')}
-              </Text>
+            {/* Content */}
+            <View style={styles.content}>
               
-              <View style={styles.contactInfoContainer}>
-                <Text style={styles.contactInfoTitle}>{t('forgotPassword.contactInfoTitle')}</Text>
-                
-                <View style={styles.contactItem}>
-                  <Ionicons name="call-outline" size={20} color="#4285f4" />
-                  <Text style={styles.contactText}>{t('forgotPassword.contactPhone')}</Text>
-                </View>
-                
-                <View style={styles.contactItem}>
-                  <Ionicons name="mail-outline" size={20} color="#4285f4" />
-                  <Text style={styles.contactText}>{t('forgotPassword.contactEmail')}</Text>
-                </View>
-                
-                <View style={styles.contactItem}>
-                  <Ionicons name="time-outline" size={20} color="#4285f4" />
-                  <Text style={styles.contactText}>{t('forgotPassword.contactHours')}</Text>
+              {/* User Icon */}
+              <View style={styles.iconContainer}>
+                <View style={styles.userIconBg}>
+                  <Text style={styles.userIcon}>👤</Text>
                 </View>
               </View>
               
-              <TouchableOpacity 
-                style={styles.modalButton}
-                onPress={() => setForgotPasswordModalVisible(false)}
-              >
-                <Text style={styles.modalButtonText}>{t('forgotPassword.closeButton')}</Text>
-              </TouchableOpacity>
+              {/* Title and subtitle */}
+              <View style={styles.titleContainer}>
+                <Text style={styles.title}>{t('login.title')}</Text>
+                <Text style={styles.subtitle}>{t('login.subtitle')}</Text>
+              </View>
+              
+              {/* Form */}
+              <View style={styles.form}>
+                
+                {/* Identifier field */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>{getIdentifierLabel()}</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={identifier}
+                    onChangeText={setIdentifier}
+                    placeholder={getIdentifierPlaceholder()}
+                    placeholderTextColor="#999"
+                    keyboardType={profileType === 'parent' ? 'phone-pad' : 'default'}
+                    autoCapitalize="none"
+                  />
+                </View>
+                
+                {/* Password field */}
+                <View style={styles.inputGroup}>
+                  <View style={styles.passwordHeader}>
+                    <Text style={styles.inputLabel}>{t('login.password')}</Text>
+                    <TouchableOpacity onPress={handleForgotPassword}>
+                      <Text style={styles.forgotLink}>{t('login.forgot')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.passwordContainer}>
+                    <TextInput
+                      style={styles.passwordInput}
+                      value={password}
+                      onChangeText={setPassword}
+                      placeholder="• • • • • • • • • •"
+                      placeholderTextColor="#999"
+                      secureTextEntry={!showPassword}
+                      autoCapitalize="none"
+                    />
+                    <TouchableOpacity 
+                      style={styles.eyeButton}
+                      onPress={() => setShowPassword(!showPassword)}
+                    >
+                      <Ionicons 
+                        name={showPassword ? "eye-outline" : "eye-off-outline"} 
+                        size={20} 
+                        color="#666" 
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                
+                {/* Remember me */}
+                <TouchableOpacity 
+                  style={styles.rememberContainer}
+                  onPress={() => setRememberMe(!rememberMe)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+                    {rememberMe && <Text style={styles.checkmark}>✓</Text>}
+                  </View>
+                  <Text style={styles.rememberText}>{t('login.remember')}</Text>
+                </TouchableOpacity>
+                
+                {/* Login button */}
+                <TouchableOpacity
+                  style={[styles.loginButton, isLoading && styles.disabledButton]}
+                  onPress={handleLogin}
+                  disabled={isLoading}
+                  activeOpacity={0.9}
+                >
+                  <Text style={styles.loginButtonText}>
+                    {isLoading ? t('login.loading') : t('login.submit')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
-    </>
+          
+          {/* Modal Mot de passe oublié */}
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={forgotPasswordModalVisible}
+            onRequestClose={() => setForgotPasswordModalVisible(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalHeader}>
+                  <TouchableOpacity 
+                    style={styles.modalCloseButton}
+                    onPress={() => setForgotPasswordModalVisible(false)}
+                  >
+                    <Text style={styles.modalCloseIcon}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+                
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>{t('forgotPassword.modalTitle')}</Text>
+                  <Text style={styles.modalMessage}>
+                    {t('forgotPassword.modalMessage')}
+                  </Text>
+                  
+                  <View style={styles.contactInfoContainer}>
+                    <Text style={styles.contactInfoTitle}>{t('forgotPassword.contactInfoTitle')}</Text>
+                    
+                    <View style={styles.contactItem}>
+                      <Ionicons name="call-outline" size={20} color="#4285f4" />
+                      <Text style={styles.contactText}>{t('forgotPassword.contactPhone')}</Text>
+                    </View>
+                    
+                    <View style={styles.contactItem}>
+                      <Ionicons name="mail-outline" size={20} color="#4285f4" />
+                      <Text style={styles.contactText}>{t('forgotPassword.contactEmail')}</Text>
+                    </View>
+                    
+                    <View style={styles.contactItem}>
+                      <Ionicons name="time-outline" size={20} color="#4285f4" />
+                      <Text style={styles.contactText}>{t('forgotPassword.contactHours')}</Text>
+                    </View>
+                  </View>
+                  
+                  <TouchableOpacity 
+                    style={styles.modalButton}
+                    onPress={() => setForgotPasswordModalVisible(false)}
+                  >
+                    <Text style={styles.modalButtonText}>{t('forgotPassword.closeButton')}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: 'white',
+    marginTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+  },
   container: {
     flex: 1,
     backgroundColor: 'white',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 0,
   },
   header: {
     paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 50,
