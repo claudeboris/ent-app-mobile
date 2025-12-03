@@ -405,12 +405,14 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: 16,
     backgroundColor: 'white',
+    color: '#000', 
   },
   passwordHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
+    
   },
   forgotLink: {
     fontSize: 14,
@@ -430,6 +432,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
+    color: '#000', 
   },
   eyeButton: {
     paddingHorizontal: 16,
